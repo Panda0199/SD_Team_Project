@@ -1,0 +1,23 @@
+# Installed packages and build output
+node_modules
+dist
+dist-ssr
+
+# Private settings. Never commit these.
+.env
+.env.local
+*.local
+
+# Test reports
+playwright-report
+test-results
+
+# Logs
+*.log
+
+# Editor files. Keep the shared VS Code settings for the team.
+.vscode/*
+!.vscode/extensions.json
+!.vscode/mcp.json
+.idea
+.DS_Store

@@ -1,0 +1,14 @@
+{
+  "name": "PR-520 team project",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:22",
+  "postCreateCommand": "npm ci",
+  "forwardPorts": [5173],
+  "portsAttributes": {
+    "5173": { "label": "Your app", "onAutoForward": "openBrowser" }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": ["saoudrizwan.claude-dev"]
+    }
+  }
+}
