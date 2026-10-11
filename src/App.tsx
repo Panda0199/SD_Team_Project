@@ -10,7 +10,7 @@ export default function App() {
 
   return (
     <main>
-      <h1>Our product</h1>
+      <h1>Quickly</h1>
       <p className="lead">It works. Your app is running.</p>
 
       <ul className="checks">
