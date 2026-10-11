@@ -1,4 +1,4 @@
-# AGENTS.md · [Team name] · PR-520 Software Development Team Project 2026/27
+# AGENTS.md · Reply All · PR-520 Software Development Team Project 2026/27
 
 You are a coding agent working for a student team at Estonian Entrepreneurship University of Applied Sciences. Read this file before every task.
 
@@ -25,7 +25,7 @@ You are a coding agent working for a student team at Estonian Entrepreneurship U
 - Vite, React, TypeScript. The start page is src/App.tsx.
 - A database is optional. Add Supabase only when a story needs to save data, and write down why in docs/DECISIONS.md.
 - Vitest for unit tests (files named *.test.ts next to the code). Playwright for browser tests in tests/e2e.
-- GitHub Actions runs CI on every pull request. Vercel deploys main to [dev URL] on every merge.
+- GitHub Actions runs CI on every pull request. Netlify deploys main to https://quickly-mainor.netlify.app/ on every merge.
 
 ## Commands
 - npm run dev      start the app on http://localhost:5173
