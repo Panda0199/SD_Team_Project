@@ -132,6 +132,30 @@ describe('local inbox data', () => {
     expect(canReplyToConversation(research, 'Teaching Assistant')).toBe(true)
     expect(canReplyToConversation(initialConversations.find(({ id }) => id === 'statistics')!, 'Teaching Assistant')).toBe(false)
   })
+
+  it('marks every unanswered student message seen when an instructor or assigned TA opens the thread', () => {
+    const original = initialConversations.find(({ id }) => id === 'research')!
+    const withFirstQuestion = appendConversationMessage(
+      original,
+      createStudentMessage('unanswered-1', original.course, 'First unanswered question?'),
+      'Student',
+    )
+    const withTwoQuestions = appendConversationMessage(
+      withFirstQuestion,
+      createStudentMessage('unanswered-2', original.course, 'Second unanswered question?'),
+      'Student',
+    )
+
+    for (const reader of ['Instructor', 'Teaching Assistant'] as const) {
+      expect(canReplyToConversation(withTwoQuestions, reader)).toBe(true)
+      const seen = markConversationSeen(withTwoQuestions, reader)
+      expect(seen.messages.filter((message) => message.id.startsWith('unanswered-')).map(({ status }) => status))
+        .toEqual(['Seen', 'Seen'])
+      expect(seen.status).toBe('Seen')
+      expect(seen.unreadForInstructor).toBe(false)
+    }
+  })
+
   it('validates fictional profile/course creation and translates interface labels', () => {
     expect(createDemoProfile(initialDemoProfiles, 'Student', '', 'new-student')).toBeNull()
     expect(createDemoProfile(initialDemoProfiles, 'Student', 'Fictional Learner', 'student-jordan')).toBeNull()

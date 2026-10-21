@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
+import { searchProductItems } from './search.js';
 
 const server = new McpServer({ name: 'our-product', version: '0.1.0' });
 
@@ -16,11 +17,15 @@ server.registerTool(
   async () => ({ content: [{ type: 'text', text: readFileSync('docs/PRODUCT.md', 'utf8') }] }),
 );
 
-// Stub until session 8. Replace the text below with a real search in your product's data.
 server.registerTool(
   'search_items',
-  { description: 'Search the product data. Stub until session 8.', inputSchema: { query: z.string() } },
-  async ({ query }) => ({ content: [{ type: 'text', text: `No data yet for "${query}". Connect this to your product's data in session 8.` }] }),
+  {
+    description: 'Search Quickly fictional course conversations by course, instructor, or message text.',
+    inputSchema: { query: z.string().trim().min(1).describe('A phrase to find in fictional course and conversation data.') },
+  },
+  async ({ query }) => ({
+    content: [{ type: 'text', text: JSON.stringify(searchProductItems(query), null, 2) }],
+  }),
 );
 
 await server.connect(new StdioServerTransport());

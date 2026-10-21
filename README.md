@@ -29,7 +29,45 @@ npm run a11y                    # accessibility check (session 9)
 5. date to be agreed: Pilot-ready release
 
 ## Agent-ready
-The product exposes one MCP tool in `mcp/server.ts`. Register it in your agent with `.vscode/mcp.json` (Copilot) or `.mcp.json` (Claude Code). Cline stores MCP servers per machine, so add it once in the Cline settings panel.
+The product exposes MCP tools from `mcp/server.ts`. Register the `our-product` server with `.vscode/mcp.json` (Copilot) or `.mcp.json` (Claude Code). Cline stores MCP servers per machine, so add it once in the Cline settings panel. Start it locally with `npm run mcp`.
+
+### `search_items`
+
+Searches Quickly's built-in fictional course conversations. It matches course names, instructor names, and message text without case sensitivity. Results include the course, instructor, conversation status, latest preview, matching fields, and matching message excerpts. This tool searches the server's bundled demo data, not changes held only in a separate browser session.
+
+Input:
+
+```json
+{ "query": "citation" }
+```
+
+Example result:
+
+```json
+{
+  "query": "citation",
+  "count": 1,
+  "matches": [
+    {
+      "course": "Academic Writing",
+      "instructor": "Lect. Marko Saar",
+      "status": "Seen",
+      "resolved": false,
+      "preview": "Could you clarify the citation style?",
+      "matchedFields": ["message"],
+      "matchingMessages": [
+        {
+          "author": "You",
+          "text": "Could you clarify the citation style for our course paper?",
+          "time": "Yesterday, 14:06"
+        }
+      ]
+    }
+  ]
+}
+```
+
+No matches return an empty `matches` array and a clear message, for example: `{ "query": "Quantum Botany", "count": 0, "matches": [], "message": "No matching conversations found." }`.
 
 ## Gates
 Run the prompt in `docs/GATE-REPORT-PROMPT.md` with your agent before every Moodle submission. The output is `docs/GATE-REPORT.md`.
