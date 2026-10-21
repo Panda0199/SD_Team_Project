@@ -18,6 +18,8 @@ test('student opens a course conversation and sends a tagged question', async ({
     .filter({ hasText: 'When should we begin the survey?' })
   await expect(sentMessage).toBeVisible()
   await expect(sentMessage.getByText('Sent', { exact: true })).toBeVisible()
+  await expect(page.getByRole('status').getByText('Waiting for reply')).toBeVisible()
+  await expect(page.getByText('Demo status only · no server request is processing.')).toBeVisible()
   await expect(page.getByText('Tagged to Research Methods')).toBeVisible()
 })
 
@@ -74,13 +76,27 @@ test('changing conversation filters clears a selection that may not match', asyn
 })
 
 test('student can search by course, instructor, or message keyword', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
   const search = page.getByRole('searchbox', { name: 'Search conversations' })
+  const searchBy = page.getByLabel('Search by')
+  await expect(searchBy).toBeVisible()
 
   await search.fill('Karin')
   await expect(page.getByRole('button', { name: /Business Statistics/ })).toBeVisible()
   await expect(page.getByRole('button', { name: /Research Methods/ })).toHaveCount(0)
 
+  await search.fill('Research')
+  await searchBy.selectOption('course')
+  await expect(page.getByRole('button', { name: /Research Methods/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: /Business Statistics/ })).toHaveCount(0)
+
+  await search.fill('Karin')
+  await searchBy.selectOption('instructor')
+  await expect(page.getByRole('button', { name: /Business Statistics/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: /Research Methods/ })).toHaveCount(0)
+
+  await searchBy.selectOption('all')
   await search.fill('open-ended')
   await expect(page.getByRole('button', { name: /Research Methods/ })).toBeVisible()
   await expect(page.getByRole('button', { name: /Business Statistics/ })).toHaveCount(0)
@@ -128,6 +144,8 @@ test('student message becomes an instructor notification and reply returns to th
   const studentThread = page.getByRole('region', { name: 'Business Statistics conversation' })
   await expect(studentThread.getByText('The median is the middle value in an ordered set.')).toBeVisible()
   await expect(studentThread.getByText('Replied', { exact: true }).last()).toBeVisible()
+  await page.getByRole('button', { name: 'Inbox' }).click()
+  await expect(page.getByRole('button', { name: /Business Statistics/ }).getByText('New reply', { exact: true })).toHaveCount(0)
   await page.getByRole('button', { name: 'Teaching Assistant', exact: true }).click()
 
   await expect(page.getByText(/This demo account can only access courses assigned to it/)).toBeVisible()
@@ -140,6 +158,31 @@ test('student message becomes an instructor notification and reply returns to th
   await page.getByRole('button', { name: 'Send reply' }).click()
   await expect(page.getByRole('region', { name: 'Research Methods conversation' })
     .getByText('I can help with this course question.')).toBeVisible()
+})
+
+test('waiting and new-reply states use Estonian labels and opening clears unread reply', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: /Business Statistics/ }).click()
+  const thread = page.locator('.thread-panel')
+  await expect(thread.getByText('Waiting for reply')).toBeVisible()
+
+  await page.getByRole('button', { name: 'ET', exact: true }).click()
+  await expect(thread.getByText('Vastust oodates')).toBeVisible()
+  await expect(thread.getByText('Ainult demo olek · serveripäringut ei töödelda.')).toBeVisible()
+
+  await page.getByRole('button', { name: 'Õppejõud', exact: true }).click()
+  await page.getByRole('button', { name: /Business Statistics/ }).click()
+  await page.locator('.composer textarea').fill('Here is a reply for the Estonian demo.')
+  await page.getByRole('button', { name: 'Saada vastus' }).click()
+
+  await page.getByRole('button', { name: 'Tudeng', exact: true }).click()
+  const studentCard = page.getByRole('button', { name: /Business Statistics/ })
+  await expect(studentCard.getByText('Uus vastus', { exact: true })).toBeVisible()
+  await expect(studentCard.locator('.status-new-reply')).toBeVisible()
+  await studentCard.click()
+  await expect(thread.getByText('Vastatud', { exact: true })).toBeVisible()
+  await page.getByRole('button', { name: /Postkast/ }).click()
+  await expect(page.getByRole('button', { name: /Business Statistics/ }).getByText('Uus vastus', { exact: true })).toHaveCount(0)
 })
 
 test('local AI demo summaries and explanations preserve human messages and never send automatically', async ({ page }) => {

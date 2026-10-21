@@ -17,11 +17,13 @@ import {
   initialDemoProfiles,
   filterConversations,
   flagConversationUrgent,
+  isWaitingForReply,
   initialConversations,
   markConversationSeen,
   resolveConversation,
   type Conversation,
   type ConversationFilter,
+  type ConversationSearchField,
   type DemoRole,
   type Message,
   type DemoCourseGroup,
@@ -42,6 +44,7 @@ export default function App() {
   const [showVoiceDemo, setShowVoiceDemo] = useState(false)
   const [filter, setFilter] = useState<ConversationFilter>('Active')
   const [query, setQuery] = useState('')
+  const [searchField, setSearchField] = useState<ConversationSearchField>('all')
   useEffect(() => {
     setConversations((current) => {
       const additions = createCourseGroupConversations(courseGroups, profiles, current)
@@ -50,7 +53,7 @@ export default function App() {
   }, [courseGroups, profiles])
   const active = conversations.find((conversation) => conversation.id === activeId)
   const roleConversations = conversationsForRole(conversations, role, courseGroups, demoProfileId)
-  const visibleConversations = filterConversations(roleConversations, filter, query)
+  const visibleConversations = filterConversations(roleConversations, filter, query, searchField)
   const activeProfile = profiles.find((profile) => profile.id === demoProfileId && profile.role === role)
   const visibleProfiles = profiles.filter((profile) => profile.role === role)
   const t = (key: LabelKey) => label(language, key)
@@ -61,6 +64,12 @@ export default function App() {
     return (role === 'Student' && direction === 'student')
       || (role === 'Instructor' && direction === 'instructor')
       || (role === 'Teaching Assistant' && direction === 'ta')
+  }
+
+  function changeSearchField(nextField: ConversationSearchField) {
+    setSearchField(nextField)
+    setActiveId(null)
+    setDraft('')
   }
 
   function messageAuthor(direction: Message['direction'], instructor: string, author: string) {
@@ -206,6 +215,20 @@ export default function App() {
             value={query}
             onChange={(event) => setQuery(event.target.value)}
           />
+          <label className="search-label" htmlFor="conversation-search-field">{t('searchBy')}</label>
+          <select
+            id="conversation-search-field"
+            className="search-field-select"
+            value={searchField}
+            onChange={(event) => {
+              const value = event.target.value
+              if (value === 'all' || value === 'course' || value === 'instructor') changeSearchField(value)
+            }}
+          >
+            <option value="all">{t('allFields')}</option>
+            <option value="course">{t('course')}</option>
+            <option value="instructor">{t('teacherInstructor')}</option>
+          </select>
 
           <div className="filter-tabs" role="group" aria-label={t('filterConversations')}>
             {(['Active', 'Resolved'] as const).map((tab) => (
@@ -243,7 +266,7 @@ export default function App() {
                       conversation.resolved
                         ? 'status-resolved'
                         : (role === 'Student' ? conversation.unreadForStudent : conversation.unreadForInstructor)
-                          ? 'status-new'
+                          ? role === 'Student' ? 'status-new status-new-reply' : 'status-new'
                           : `status-${conversation.status.toLowerCase()}`
                     }`}>
                       {conversation.resolved
@@ -289,6 +312,12 @@ export default function App() {
                 <p className="thread-date">
                   {role === 'Student' ? t('yourConversation') : `${t('conversationWith')} ${active.studentName ?? DEMO_STUDENT_NAME}`} · {active.course}
                 </p>
+                {role === 'Student' && isWaitingForReply(active) && (
+                  <div className="reply-waiting-state" role="status">
+                    <strong>{t('waitingForReply')}</strong>
+                    <span>{t('demoWaitingNote')}</span>
+                  </div>
+                )}
                 {active.messages.length === 0
                   ? <p className="thread-empty-copy">{t('noMessagesYet')}</p>
                   : active.messages.map((message) => (
