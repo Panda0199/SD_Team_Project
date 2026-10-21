@@ -117,7 +117,7 @@ export function explainDemoReplySimply(body: string): string {
 }
 
 export type ProfileRole = Exclude<DemoRole, 'Admin'>
-export interface DemoProfile { id: string; name: string; demoId: string; role: ProfileRole }
+export interface DemoProfile { id: string; name: string; demoId: string; role: DemoRole }
 export interface DemoCourseGroup { id: string; name: string; instructorId: string; studentIds: string[]; taId: string }
 
 export function createDemoProfile(profiles: DemoProfile[], role: ProfileRole, name: string, demoId: string): DemoProfile | null {

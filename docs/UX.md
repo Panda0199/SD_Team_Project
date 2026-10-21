@@ -5,8 +5,9 @@
 - Prototype tool: deployed Quickly web application.
 - Prototype link: https://quickly-mainor.netlify.app
 - Quickly is a mobile-first web application designed primarily for use in a mobile browser, with a responsive layout for larger screens.
-- The current prototype uses fictional in-memory demo data. It has no real sign-in, backend persistence, or secure role permissions.
-- The role selector switches between Student, Instructor, Teaching Assistant, and Admin demo views. It is a demonstration control, not authentication.
+- With Supabase configured, the application uses email/password sign-in, persisted profiles/courses/conversations/messages, and database Row Level Security. The authenticated profile selects the Student, Instructor, Teaching Assistant, or Admin view; role-switching controls are hidden.
+- Without Supabase configuration, the application retains its fictional in-memory demo mode and role selector. This mode is used explicitly by the automated E2E/a11y harness and is not authentication or secure role enforcement.
+- Admin profile management in backend mode attaches details to an Auth user that has already been created in Supabase; it does not create login credentials.
 
 ## Current v1 screens
 
