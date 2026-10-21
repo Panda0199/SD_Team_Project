@@ -1,12 +1,49 @@
 export type MessageStatus = 'Sent' | 'Seen' | 'Replied'
 export type InstructorAvailability = 'Available' | 'Away'
 export type ConversationFilter = 'Active' | 'Resolved'
-export type DemoRole = 'Student' | 'Instructor' | 'Teaching Assistant'
-export type ReplyRole = Exclude<DemoRole, 'Student'>
+export type DemoRole = 'Student' | 'Instructor' | 'Teaching Assistant' | 'Admin'
+export type ReplyRole = 'Instructor' | 'Teaching Assistant'
+
+export type ProfileRole = Exclude<DemoRole, 'Admin'>
+export interface DemoProfile { id: string; name: string; demoId: string; role: ProfileRole }
+export interface DemoCourseGroup { id: string; name: string; instructorId: string; studentIds: string[]; taId: string }
+
+export function createDemoProfile(profiles: DemoProfile[], role: ProfileRole, name: string, demoId: string): DemoProfile | null {
+  const cleanName = name.trim()
+  const cleanId = demoId.trim()
+  const id = `profile-${cleanId.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
+  if (!cleanName || !cleanId || profiles.some((profile) =>
+    profile.demoId.toLowerCase() === cleanId.toLowerCase()
+    || `profile-${profile.demoId.toLowerCase().replace(/[^a-z0-9]+/g, '-')}` === id
+  )) return null
+  return { id, name: cleanName, demoId: cleanId, role }
+}
+
+export function createDemoCourseGroup(groups: DemoCourseGroup[], profiles: DemoProfile[], name: string, instructorId: string, studentIds: string[], taId = ''): DemoCourseGroup | null {
+  const cleanName = name.trim()
+  const id = `course-${cleanName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
+  const instructor = profiles.find((profile) => profile.id === instructorId)
+  const students = studentIds.map((studentId) => profiles.find((profile) => profile.id === studentId))
+  const ta = taId ? profiles.find((profile) => profile.id === taId) : undefined
+  if (!cleanName || !instructor || instructor.role !== 'Instructor' || !studentIds.length
+    || students.some((profile) => !profile || profile.role !== 'Student')
+    || (taId && (!ta || ta.role !== 'Teaching Assistant'))
+    || groups.some((group) => group.name.toLowerCase() === cleanName.toLowerCase() || group.id === id)) return null
+  return { id, name: cleanName, instructorId, studentIds: [...new Set(studentIds)], taId }
+}
+
+export const initialDemoProfiles: DemoProfile[] = [
+  { id: 'p1', name: 'Jordan Doe', demoId: 'student-jordan', role: 'Student' },
+  { id: 'p2', name: 'Dr. Lina Kask', demoId: 'instructor-lina', role: 'Instructor' },
+  { id: 'p3', name: 'Sam Lee', demoId: 'ta-sam', role: 'Teaching Assistant' },
+]
+
+export const initialDemoCourseGroups: DemoCourseGroup[] = [
+  { id: 'g1', name: 'Research Methods', instructorId: 'p2', studentIds: ['p1'], taId: 'p3' },
+]
 
 export const DEMO_STUDENT_NAME = 'Jordan Doe'
 export const TEACHING_ASSISTANT_NAME = 'Sam Lee'
-export const TA_ASSIGNED_COURSES = ['Research Methods']
 
 export interface Message {
   id: string
@@ -32,10 +69,66 @@ export interface Conversation {
   unreadForInstructor: boolean
   unreadForStudent: boolean
   messages: Message[]
+  courseGroupId?: string
+  studentId?: string
+  studentName?: string
 }
 
-export function createStudentMessage(id: string, course: string, body: string): Message {
-  return { id, author: 'You', body, direction: 'student', time: 'Just now', status: 'Sent', course }
+export function demoProfileIdForRole(role: DemoRole, profiles: DemoProfile[], groups: DemoCourseGroup[]): string | undefined {
+  if (role === 'Student') {
+    return profiles.find((profile) => profile.id === 'p1' && profile.role === role)?.id
+      ?? profiles.find((profile) => profile.role === role)?.id
+  }
+  if (role === 'Instructor') {
+    return groups.findLast((group) => profiles.some((profile) => profile.id === group.instructorId && profile.role === role))?.instructorId
+      ?? profiles.find((profile) => profile.role === role)?.id
+  }
+  if (role === 'Teaching Assistant') {
+    return groups.findLast((group) => profiles.some((profile) => profile.id === group.taId && profile.role === role))?.taId
+      ?? profiles.find((profile) => profile.role === role)?.id
+  }
+  return undefined
+}
+
+export function createCourseGroupConversations(
+  groups: DemoCourseGroup[],
+  profiles: DemoProfile[],
+  conversations: Conversation[],
+): Conversation[] {
+  const newConversations: Conversation[] = []
+  for (const group of groups) {
+    if (conversations.some((conversation) => !conversation.courseGroupId && conversation.course === group.name)) continue
+    const instructor = profiles.find((profile) => profile.id === group.instructorId && profile.role === 'Instructor')
+    if (!instructor) continue
+    for (const studentId of group.studentIds) {
+      const student = profiles.find((profile) => profile.id === studentId && profile.role === 'Student')
+      if (!student || conversations.some((conversation) => conversation.courseGroupId === group.id && conversation.studentId === studentId)
+        || newConversations.some((conversation) => conversation.courseGroupId === group.id && conversation.studentId === studentId)) continue
+      newConversations.push({
+        id: `${group.id}-${student.id}`,
+        course: group.name,
+        instructor: instructor.name,
+        availability: 'Available',
+        preview: '',
+        updatedAt: 'New',
+        status: 'Sent',
+        waitingHours: 0,
+        urgent: false,
+        resolved: false,
+        unreadForInstructor: false,
+        unreadForStudent: false,
+        messages: [],
+        courseGroupId: group.id,
+        studentId: student.id,
+        studentName: student.name,
+      })
+    }
+  }
+  return newConversations
+}
+
+export function createStudentMessage(id: string, course: string, body: string, author = 'You'): Message {
+  return { id, author, body, direction: 'student', time: 'Just now', status: 'Sent', course }
 }
 
 export function createReplyMessage(
@@ -44,9 +137,10 @@ export function createReplyMessage(
   body: string,
   role: ReplyRole,
   instructor: string,
+  author?: string,
 ): Message {
   const isTeachingAssistant = role === 'Teaching Assistant'
-  return { id, author: isTeachingAssistant ? TEACHING_ASSISTANT_NAME : instructor, body, direction: isTeachingAssistant ? 'ta' : 'instructor', time: 'Just now', status: 'Replied', course }
+  return { id, author: author ?? (isTeachingAssistant ? TEACHING_ASSISTANT_NAME : instructor), body, direction: isTeachingAssistant ? 'ta' : 'instructor', time: 'Just now', status: 'Replied', course }
 }
 
 export function appendConversationMessage(
@@ -72,14 +166,34 @@ export function markConversationSeen(conversation: Conversation, reader: DemoRol
   }
 }
 
-export function conversationsForRole(conversations: Conversation[], role: DemoRole): Conversation[] {
-  if (role !== 'Teaching Assistant') return conversations
-  return conversations.filter((conversation) => TA_ASSIGNED_COURSES.includes(conversation.course))
+export function conversationsForRole(
+  conversations: Conversation[],
+  role: DemoRole,
+  groups: DemoCourseGroup[] = initialDemoCourseGroups,
+  profileId = role === 'Student' ? 'p1' : role === 'Instructor' ? 'p2' : 'p3',
+): Conversation[] {
+  if (role === 'Admin') return []
+  return conversations.filter((conversation) => {
+    if (!conversation.courseGroupId) {
+      return role !== 'Teaching Assistant'
+        || groups.some((group) => group.taId === profileId && group.name === conversation.course)
+    }
+    const group = groups.find((item) => item.id === conversation.courseGroupId)
+    if (!group) return false
+    if (role === 'Student') return conversation.studentId === profileId && group.studentIds.includes(profileId)
+    if (role === 'Instructor') return group.instructorId === profileId
+    return group.taId === profileId
+  })
 }
 
-export function canReplyToConversation(conversation: Conversation, role: DemoRole): boolean {
-  return role === 'Instructor'
-    || (role === 'Teaching Assistant' && TA_ASSIGNED_COURSES.includes(conversation.course))
+export function canReplyToConversation(
+  conversation: Conversation,
+  role: DemoRole,
+  groups: DemoCourseGroup[] = initialDemoCourseGroups,
+  profileId = role === 'Teaching Assistant' ? 'p3' : undefined,
+): boolean {
+  if (role === 'Instructor' && !conversation.courseGroupId) return true
+  return conversationsForRole([conversation], role, groups, profileId).length > 0
 }
 
 export function flagConversationUrgent(conversation: Conversation): Conversation {
