@@ -1,40 +1,64 @@
-:root {
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  line-height: 1.5;
-  color: #1f2328;
-  background: #ffffff;
-}
-
-body {
-  margin: 0;
-}
-
-main {
-  max-width: 40rem;
-  margin: 0 auto;
-  padding: 3rem 1.25rem;
-}
-
-h1 {
-  font-size: 2.25rem;
-  margin: 0 0 0.5rem;
-}
-
-.lead {
-  font-size: 1.2rem;
-  margin: 0 0 2rem;
-}
-
-.checks {
-  padding-left: 1.2rem;
-}
-
-.checks li {
-  margin-bottom: 0.75rem;
-}
-
-code {
-  background: #f1f3f5;
-  padding: 0.1em 0.35em;
-  border-radius: 4px;
-}
+:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;color:#1e293b;background:#f4f7fb;font-synthesis:none;text-rendering:optimizeLegibility;font-weight:400}
+*{box-sizing:border-box}
+body{margin:0;min-width:320px;min-height:100vh}
+button,textarea{font:inherit}
+button{cursor:pointer}
+.app-shell{min-height:100vh}
+.topbar{height:68px;background:#fff;border-bottom:1px solid #e6ebf2;display:flex;align-items:center;padding:0 max(24px,calc((100vw - 1180px)/2));gap:14px}
+.brand{display:flex;align-items:center;gap:10px;color:#12243a;font-weight:750;font-size:20px;text-decoration:none;letter-spacing:-.4px}
+.brand-mark{display:grid;place-items:center;background:#2457d6;color:#fff;width:32px;height:32px;border-radius:10px;font-size:19px}
+.demo-label{font-size:12px;color:#53657d;background:#f2f5fa;padding:6px 10px;border-radius:999px}
+.avatar{margin-left:auto;border:0;border-radius:50%;width:36px;height:36px;background:#e9efff;color:#2457d6;font-weight:700}
+.workspace{max-width:1180px;margin:0 auto;min-height:calc(100vh - 68px);display:grid;grid-template-columns:360px minmax(0,1fr);background:#fff;box-shadow:0 8px 32px #1731580a}
+.inbox-panel{border-right:1px solid #e8edf4;padding:28px 18px 16px;display:flex;flex-direction:column;min-height:calc(100vh - 68px)}
+.panel-heading{display:flex;align-items:center;justify-content:space-between;padding:0 10px}
+.eyebrow{font-size:10px;font-weight:750;letter-spacing:1.15px;color:#52657c;margin:0 0 5px}
+h1,h2,p{margin-top:0}
+.panel-heading h1{font-size:26px;letter-spacing:-.7px;margin:0;color:#14263d}
+.count{font-size:12px;background:#edf2ff;color:#2457d6;padding:4px 9px;border-radius:12px;font-weight:700}
+.panel-intro{font-size:13px;color:#59697e;margin:8px 10px 20px}
+.conversation-list{display:grid;gap:5px}
+.conversation-card{width:100%;border:0;background:transparent;text-align:left;border-radius:12px;padding:13px 10px;display:flex;gap:11px;color:inherit}
+.conversation-card:hover,.conversation-card.selected{background:#f2f6ff}
+.conversation-card:focus-visible,.back-button:focus-visible,.avatar:focus-visible,.composer button:focus-visible,textarea:focus-visible{outline:3px solid #96b2ff;outline-offset:2px}
+.course-icon{flex:none;width:38px;height:38px;border-radius:11px;background:#eaf0fc;color:#325d9f;display:grid;place-items:center;font-weight:700}
+.card-copy{min-width:0;flex:1;display:grid;gap:3px}
+.card-topline{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.card-topline strong{font-size:13px;color:#22334a}
+.card-topline time,.instructor-name{font-size:11px;color:#5d6c80}
+.preview{font-size:12px;color:#58677b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.status{display:inline-flex;align-items:center;width:max-content;font-size:10px;font-weight:700;border-radius:99px;padding:3px 8px}
+.status-sent{color:#52647a;background:#edf1f5}
+.status-seen{color:#8a5b0a;background:#fff3db}
+.status-replied{color:#147451;background:#e5f6ee}
+.privacy-note{margin-top:auto;padding:18px 10px 4px;font-size:11px;color:#5d6b7c}
+.thread-panel{min-width:0;display:flex;flex-direction:column;min-height:calc(100vh - 68px)}
+.thread-heading{padding:27px 34px 19px;border-bottom:1px solid #edf0f5}
+.back-button{display:inline-flex;align-items:center;gap:7px;border:0;background:transparent;color:#315bb5;font-size:13px;font-weight:650;padding:0;margin:0 0 17px}
+.course-pill{font-size:11px;font-weight:700;letter-spacing:.15px;color:#315bb5;background:#edf2ff;border-radius:99px;padding:5px 9px}
+.thread-heading h2{font-size:18px;margin:12px 0 2px;color:#172b45}
+.thread-heading p{font-size:12px;color:#8592a3;margin:0}
+.message-list{flex:1;padding:22px 34px;display:flex;flex-direction:column;gap:14px}
+.thread-date{text-align:center;color:#95a1b0;font-size:11px;margin:2px 0 8px}
+.message{max-width:min(78%,500px);padding:12px 14px;border-radius:4px 15px 15px 15px;background:#f0f3f8;align-self:flex-start}
+.message.student{background:#eaf0ff;border-radius:15px 4px 15px 15px;align-self:flex-end}
+.message-author{font-size:11px;font-weight:700;color:#54657a}
+.message p{font-size:13px;line-height:1.55;margin:5px 0 8px;color:#28384d;overflow-wrap:anywhere}
+.message-meta{display:flex;align-items:center;gap:8px;font-size:10px;color:#8c9aab}
+.message-meta .status{font-size:9px;padding:2px 7px}
+.composer{margin:0 24px 24px;padding:15px;border:1px solid #dfe6ef;border-radius:14px;background:#fff;box-shadow:0 4px 16px #16375b0a}
+.composer label{display:block;font-size:12px;font-weight:700;color:#41536b;margin:0 0 8px}
+.composer textarea{display:block;resize:vertical;width:100%;min-height:65px;border:0;outline:0;color:#22334a;font-size:13px;line-height:1.5}
+.composer textarea::placeholder{color:#a0aab8}
+.composer-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid #eef1f5;padding-top:11px;margin-top:8px}
+.composer-footer span{font-size:11px;color:#8290a2}
+.composer button{border:0;border-radius:9px;background:#2457d6;color:white;padding:9px 13px;font-size:12px;font-weight:700}
+.composer button:disabled{background:#aab9d9;cursor:not-allowed}
+.composer button span{color:white;font-size:14px;margin-left:5px}
+.empty-state{margin:auto;text-align:center;max-width:370px;padding:36px}
+.empty-icon{display:grid;place-items:center;margin:0 auto 17px;width:54px;height:54px;border-radius:17px;background:#edf2ff;color:#315fc2;font-size:24px}
+.empty-state h2{font-size:18px;color:#20334c;margin-bottom:8px}
+.empty-state p{font-size:13px;line-height:1.6;color:#536277}
+@media(max-width:700px){.topbar{height:60px;padding:0 16px}.workspace{display:block;min-height:calc(100vh - 60px)}.inbox-panel{min-height:calc(100vh - 60px);border:0;padding:22px 14px 14px}.thread-panel{display:none;min-height:calc(100vh - 60px)}.conversation-open .inbox-panel{display:none}.conversation-open .thread-panel{display:flex}.thread-heading{padding:14px 16px 15px}.back-button{display:inline-flex;align-items:center;gap:7px;border:0;background:transparent;color:#315bb5;font-size:13px;font-weight:650;padding:0;margin:0 0 17px}.course-pill{display:block;width:max-content}.thread-heading h2{margin-top:9px}.message-list{padding:18px 15px}.message{max-width:88%}.composer{margin:0 12px 12px;padding:13px}.privacy-note{padding-bottom:8px}}
+@media(min-width:701px){.thread-panel{position:sticky;top:0;height:calc(100vh - 68px)}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
