@@ -1,9 +1,15 @@
 import { describe, expect, it } from 'vitest'
-import { createStudentMessage, initialConversations } from './inbox'
+import {
+  createStudentMessage,
+  filterConversations,
+  flagConversationUrgent,
+  initialConversations,
+  resolveConversation,
+} from './inbox'
 
 describe('local inbox data', () => {
   it('provides fictional course conversations with visible message statuses', () => {
-    expect(initialConversations.map(({ status }) => status)).toEqual(['Replied', 'Seen', 'Sent'])
+    expect(initialConversations.map(({ status }) => status)).toEqual(['Replied', 'Seen', 'Sent', 'Replied'])
     expect(initialConversations.every((conversation) => conversation.messages.every((message) => message.course === conversation.course))).toBe(true)
   })
 
@@ -17,5 +23,23 @@ describe('local inbox data', () => {
       status: 'Sent',
       course: 'Research Methods',
     })
+  })
+  it('flags an unanswered conversation only after two hours', () => {
+    const waiting = initialConversations.find(({ id }) => id === 'statistics')!
+    const urgent = flagConversationUrgent(waiting)
+    expect(urgent.urgent).toBe(true)
+    expect(flagConversationUrgent(initialConversations[0])).toBe(initialConversations[0])
+  })
+  it('resolves a conversation without removing its message history', () => {
+    const conversation = initialConversations.find(({ id }) => id === 'research')!
+    const resolved = resolveConversation(conversation)
+    expect(resolved.resolved).toBe(true)
+    expect(resolved.messages).toEqual(conversation.messages)
+  })
+  it('filters by active or resolved and searches course, instructor, and message text', () => {
+    expect(filterConversations(initialConversations, 'Active', 'Karin')).toHaveLength(1)
+    expect(filterConversations(initialConversations, 'Active', 'open-ended')).toHaveLength(1)
+    expect(filterConversations(initialConversations, 'Resolved', '')[0].course).toBe('Marketing Principles')
+    expect(filterConversations(initialConversations, 'Active', 'no match')).toHaveLength(0)
   })
 })
