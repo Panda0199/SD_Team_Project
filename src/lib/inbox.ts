@@ -1,6 +1,7 @@
 export type MessageStatus = 'Sent' | 'Seen' | 'Replied'
 export type InstructorAvailability = 'Available' | 'Away'
 export type ConversationFilter = 'Active' | 'Resolved'
+export type ConversationSearchField = 'all' | 'course' | 'instructor'
 export type DemoRole = 'Student' | 'Instructor' | 'Teaching Assistant' | 'Admin'
 export type ReplyRole = 'Instructor' | 'Teaching Assistant'
 export const DEMO_SUMMARY_THRESHOLD = 180
@@ -318,20 +319,27 @@ export function resolveConversation(conversation: Conversation): Conversation {
   return { ...conversation, resolved: true }
 }
 
+export function isWaitingForReply(conversation: Conversation): boolean {
+  return !conversation.resolved
+    && (conversation.status === 'Sent' || conversation.status === 'Seen')
+    && conversation.messages.at(-1)?.direction === 'student'
+}
+
 export function filterConversations(
   conversations: Conversation[],
   filter: ConversationFilter,
   query: string,
+  searchField: ConversationSearchField = 'all',
 ): Conversation[] {
   const normalizedQuery = query.trim().toLocaleLowerCase()
   return conversations.filter((conversation) => {
     const matchesFilter = filter === 'Resolved' ? conversation.resolved : !conversation.resolved
-    const searchableText = [
-      conversation.course,
-      conversation.instructor,
-      ...conversation.messages.map((message) => message.body),
-    ].join(' ').toLocaleLowerCase()
-    return matchesFilter && (!normalizedQuery || searchableText.includes(normalizedQuery))
+    const searchableText = searchField === 'course'
+      ? conversation.course
+      : searchField === 'instructor'
+        ? conversation.instructor
+        : [conversation.course, conversation.instructor, ...conversation.messages.map((message) => message.body)].join(' ')
+    return matchesFilter && (!normalizedQuery || searchableText.toLocaleLowerCase().includes(normalizedQuery))
   })
 }
 

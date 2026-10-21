@@ -17,6 +17,7 @@ import {
   initialDemoCourseGroups,
   initialDemoProfiles,
   isLongStudentMessage,
+  isWaitingForReply,
   markConversationSeen,
   resolveConversation,
 } from './inbox'
@@ -103,8 +104,22 @@ describe('local inbox data', () => {
   it('filters by active or resolved and searches course, instructor, and message text', () => {
     expect(filterConversations(initialConversations, 'Active', 'Karin')).toHaveLength(1)
     expect(filterConversations(initialConversations, 'Active', 'open-ended')).toHaveLength(1)
+    expect(filterConversations(initialConversations, 'Active', 'Research', 'course')).toHaveLength(1)
+    expect(filterConversations(initialConversations, 'Active', 'Karin', 'instructor')).toHaveLength(1)
+    expect(filterConversations(initialConversations, 'Active', 'open-ended', 'instructor')).toHaveLength(0)
     expect(filterConversations(initialConversations, 'Resolved', '')[0].course).toBe('Marketing Principles')
     expect(filterConversations(initialConversations, 'Active', 'no match')).toHaveLength(0)
+  })
+
+  it('shows waiting status only while the latest student message needs a reply', () => {
+    const sent = initialConversations.find(({ id }) => id === 'statistics')!
+    expect(isWaitingForReply(sent)).toBe(true)
+    expect(isWaitingForReply(markConversationSeen(sent, 'Instructor'))).toBe(true)
+    expect(isWaitingForReply(initialConversations.find(({ id }) => id === 'research')!)).toBe(false)
+    const replied = appendConversationMessage(sent, createReplyMessage('reply', sent.course, 'Here is an answer.', 'Instructor', sent.instructor), 'Instructor')
+    expect(isWaitingForReply(replied)).toBe(false)
+    expect(isWaitingForReply(resolveConversation(sent))).toBe(false)
+    expect(markConversationSeen(replied, 'Student').unreadForStudent).toBe(false)
   })
 
   it('shares messages between demo roles and limits the TA to assigned courses', () => {
@@ -127,6 +142,10 @@ describe('local inbox data', () => {
     expect(createDemoCourseGroup(initialDemoCourseGroups, initialDemoProfiles, 'New course', 'p1', ['p1'])).toBeNull()
     expect(createDemoCourseGroup(initialDemoCourseGroups, initialDemoProfiles, 'New course', 'p2', ['p1'], 'p3')).toMatchObject({ name: 'New course', instructorId: 'p2', studentIds: ['p1'], taId: 'p3' })
     expect(label('ET', 'adminTitle')).toBe('Profiilide ja kursuste haldus')
+    expect(label('EN', 'waitingForReply')).toBe('Waiting for reply')
+    expect(label('ET', 'waitingForReply')).toBe('Vastust oodates')
+    expect(label('EN', 'teacherInstructor')).toBe('Teacher / Instructor')
+    expect(label('ET', 'teacherInstructor')).toBe('Õpetaja / õppejõud')
   })
 
   it('creates empty per-student course threads and scopes them to assigned demo accounts', () => {
