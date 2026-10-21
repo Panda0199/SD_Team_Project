@@ -489,7 +489,7 @@ export default function App() {
                 <button className="back-button" onClick={() => setActiveId(null)}>← <span>{t('inbox')}</span></button>
                 <span className="course-pill">{active.course}</span>
                 <h2>{role === 'Student' ? active.instructor : active.studentName ?? DEMO_STUDENT_NAME}</h2>
-                <p>{role === 'Student' ? t('courseInstructor') : t('studentDemo')}</p>
+                <p>{role === 'Student' ? t('courseInstructor') : t(supabaseConfigured ? 'student' : 'studentDemo')}</p>
                 {role === 'Student' && (
                   <>
                     <div className="availability-row">

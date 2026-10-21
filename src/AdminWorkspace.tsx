@@ -35,7 +35,7 @@ export default function AdminWorkspace({ language, profiles, setProfiles, groups
       if (!authUserId.trim() || !name.trim() || !demoId.trim() || !onCreateProfile) { setMessage(t('required')); return }
       try {
         await onCreateProfile({ id: authUserId.trim(), universityId: demoId.trim(), name: name.trim(), role: profileRole })
-        setName(''); setDemoId(''); setAuthUserId(''); setMessage(t('profileCreated'))
+        setName(''); setDemoId(''); setAuthUserId(''); setMessage(t('profileSaved'))
       } catch (error) {
         setMessage(error instanceof Error ? error.message : String(error))
       }
@@ -57,7 +57,7 @@ export default function AdminWorkspace({ language, profiles, setProfiles, groups
     if (backendMode && onCreateCourse) {
       try {
         await onCreateCourse({ name: course, instructorId, studentIds, taId })
-        setCourse(''); setInstructorId(''); setStudentIds([]); setTaId(''); setMessage(t('courseCreated'))
+        setCourse(''); setInstructorId(''); setStudentIds([]); setTaId(''); setMessage(t('courseSaved'))
       } catch (error) {
         setMessage(error instanceof Error ? error.message : String(error))
       }
@@ -72,7 +72,7 @@ export default function AdminWorkspace({ language, profiles, setProfiles, groups
       <header className="admin-heading">
         <p className="eyebrow">{t('adminSpace')}</p>
         <h1>{t('adminTitle')}</h1>
-        <p>{t('adminIntro')}</p>
+        <p>{t(backendMode ? 'adminIntroProduction' : 'adminIntro')}</p>
         <p className="admin-demo-note">{t(backendMode ? 'authProfileNote' : 'demoSecurity')}</p>
       </header>
       {message && <p className="form-feedback" role="status">{message}</p>}
@@ -91,7 +91,7 @@ export default function AdminWorkspace({ language, profiles, setProfiles, groups
             <h3>{t('createProfile')}</h3>
             {backendMode && <label>{t('authUserId')}<input required value={authUserId} onChange={(event) => setAuthUserId(event.target.value)} /></label>}
             <label>{t('profileName')}<input required value={name} onChange={(event) => setName(event.target.value)} /></label>
-            <label>{t('demoId')}<input required value={demoId} onChange={(event) => setDemoId(event.target.value)} /></label>
+            <label>{t(backendMode ? 'universityId' : 'demoId')}<input required value={demoId} onChange={(event) => setDemoId(event.target.value)} /></label>
             <label>{t('profileType')}
               <select value={profileRole} onChange={(event) => setProfileRole(event.target.value as DemoProfile['role'])}>
                 <option value="Student">{t('student')}</option><option value="Instructor">{t('instructor')}</option><option value="Teaching Assistant">{t('assistant')}</option>
