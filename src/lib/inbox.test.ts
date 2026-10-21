@@ -1,9 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import {
+  appendConversationMessage,
+  canReplyToConversation,
+  conversationsForRole,
   createStudentMessage,
   filterConversations,
   flagConversationUrgent,
   initialConversations,
+  markConversationSeen,
   resolveConversation,
 } from './inbox'
 
@@ -41,5 +45,16 @@ describe('local inbox data', () => {
     expect(filterConversations(initialConversations, 'Active', 'open-ended')).toHaveLength(1)
     expect(filterConversations(initialConversations, 'Resolved', '')[0].course).toBe('Marketing Principles')
     expect(filterConversations(initialConversations, 'Active', 'no match')).toHaveLength(0)
+  })
+
+  it('shares messages between demo roles and limits the TA to assigned courses', () => {
+    const conversation = initialConversations.find(({ id }) => id === 'statistics')!
+    const withQuestion = appendConversationMessage(conversation, createStudentMessage('new-2', conversation.course, 'Could you explain the median?'), 'Student')
+    expect(withQuestion).toMatchObject({ unreadForInstructor: true, preview: 'Could you explain the median?' })
+    expect(markConversationSeen(withQuestion, 'Instructor')).toMatchObject({ unreadForInstructor: false, status: 'Seen' })
+    expect(conversationsForRole(initialConversations, 'Teaching Assistant').map(({ course }) => course)).toEqual(['Research Methods'])
+    const research = initialConversations.find(({ id }) => id === 'research')!
+    expect(canReplyToConversation(research, 'Teaching Assistant')).toBe(true)
+    expect(canReplyToConversation(initialConversations.find(({ id }) => id === 'statistics')!, 'Teaching Assistant')).toBe(false)
   })
 })

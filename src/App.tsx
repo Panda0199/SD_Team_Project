@@ -1,39 +1,76 @@
 import { useState, type FormEvent } from 'react'
 import {
+  appendConversationMessage,
+  canReplyToConversation,
+  conversationsForRole,
   createStudentMessage,
+  createReplyMessage,
+  DEMO_STUDENT_NAME,
   filterConversations,
   flagConversationUrgent,
   initialConversations,
+  markConversationSeen,
   resolveConversation,
   type Conversation,
   type ConversationFilter,
+  type DemoRole,
+  type Message,
 } from './lib/inbox'
 
 export default function App() {
   const [conversations, setConversations] = useState<Conversation[]>(initialConversations)
+  const [role, setRole] = useState<DemoRole>('Student')
   const [activeId, setActiveId] = useState<string | null>(null)
   const [draft, setDraft] = useState('')
   const [filter, setFilter] = useState<ConversationFilter>('Active')
   const [query, setQuery] = useState('')
   const active = conversations.find((conversation) => conversation.id === activeId)
-  const visibleConversations = filterConversations(conversations, filter, query)
+  const roleConversations = conversationsForRole(conversations, role)
+  const visibleConversations = filterConversations(roleConversations, filter, query)
+
+  function isOutgoing(direction: Message['direction']) {
+    return (role === 'Student' && direction === 'student')
+      || (role === 'Instructor' && direction === 'instructor')
+      || (role === 'Teaching Assistant' && direction === 'ta')
+  }
+
+  function messageAuthor(direction: Message['direction'], instructor: string) {
+    if (direction === 'student') return role === 'Student' ? 'You' : DEMO_STUDENT_NAME
+    if (direction === 'ta') return role === 'Teaching Assistant' ? 'You' : 'Sam Lee'
+    return role === 'Instructor' ? 'You' : instructor
+  }
+
+  function selectRole(nextRole: DemoRole) {
+    setRole(nextRole)
+    setActiveId(null)
+    setDraft('')
+  }
+
+  function openConversation(conversation: Conversation) {
+    setActiveId(conversation.id)
+    setDraft('')
+    setConversations((current) =>
+      current.map((item) =>
+        item.id === conversation.id ? markConversationSeen(item, role) : item,
+      ),
+    )
+  }
 
   function sendMessage(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!active || active.resolved || !draft.trim()) return
-    const message = createStudentMessage(`${Date.now()}`, active.course, draft.trim())
+    if (
+      !active
+      || active.resolved
+      || !draft.trim()
+      || (role !== 'Student' && !canReplyToConversation(active, role))
+    ) return
+    const message = role === 'Student'
+      ? createStudentMessage(`${Date.now()}`, active.course, draft.trim())
+      : createReplyMessage(`${Date.now()}`, active.course, draft.trim(), role, active.instructor)
     setConversations((current) =>
       current.map((conversation) =>
         conversation.id === active.id
-          ? {
-              ...conversation,
-              messages: [...conversation.messages, message],
-              preview: message.body,
-              status: 'Sent',
-              waitingHours: 0,
-              urgent: false,
-              updatedAt: 'Just now',
-            }
+          ? appendConversationMessage(conversation, message, role)
           : conversation,
       ),
     )
@@ -41,7 +78,7 @@ export default function App() {
   }
 
   function markResolved() {
-    if (!active) return
+    if (!active || role !== 'Instructor') return
     setConversations((current) =>
       current.map((conversation) =>
         conversation.id === active.id ? resolveConversation(conversation) : conversation,
@@ -51,7 +88,7 @@ export default function App() {
   }
 
   function markUrgent() {
-    if (!active) return
+    if (!active || role !== 'Student') return
     setConversations((current) =>
       current.map((conversation) =>
         conversation.id === active.id ? flagConversationUrgent(conversation) : conversation,
@@ -72,21 +109,41 @@ export default function App() {
           <span className="brand-mark" aria-hidden="true">Q</span>
           Quickly
         </a>
-        <span className="demo-label">Fictional demo data</span>
-        <span className="avatar" aria-hidden="true">JD</span>
+        <span className="demo-label">Fictional data · no sign-in</span>
+        <div className="demo-role-control">
+          <span className="demo-role-label">DEMO VIEW</span>
+          <div className="demo-role-buttons" role="group" aria-label="Switch demo role">
+            {(['Student', 'Instructor', 'Teaching Assistant'] as const).map((demoRole) => (
+              <button
+                key={demoRole}
+                aria-label={demoRole}
+                aria-pressed={role === demoRole}
+                onClick={() => selectRole(demoRole)}
+              >
+                {demoRole === 'Teaching Assistant' ? 'TA' : demoRole}
+              </button>
+            ))}
+          </div>
+        </div>
       </header>
 
       <main className={`workspace${active ? ' conversation-open' : ''}`}>
         <aside className="inbox-panel" aria-label="Inbox">
           <div className="panel-heading">
             <div>
-              <p className="eyebrow">STUDENT SPACE</p>
+              <p className="eyebrow">{role === 'Student' ? 'STUDENT SPACE' : `${role.toUpperCase()} SPACE`}</p>
               <h1>Inbox</h1>
             </div>
             <span className="count">{visibleConversations.length}</span>
           </div>
-          <p className="panel-intro">Your course conversations</p>
-
+          <p className="panel-intro">
+            {role === 'Student' ? 'Your course conversations' : 'Student course conversations'}
+          </p>
+          {role === 'Teaching Assistant' && (
+            <p className="role-scope-note">
+              Sam Lee can access Research Methods only. Other course conversations are unavailable in this demo.
+            </p>
+          )}
           <label className="search-label" htmlFor="conversation-search">Search conversations</label>
           <input
             id="conversation-search"
@@ -115,7 +172,7 @@ export default function App() {
               <button
                 className={`conversation-card${activeId === conversation.id ? ' selected' : ''}`}
                 key={conversation.id}
-                onClick={() => { setActiveId(conversation.id); setDraft('') }}
+                onClick={() => openConversation(conversation)}
                 aria-current={activeId === conversation.id ? 'page' : undefined}
               >
                 <span className="course-icon" aria-hidden="true">{conversation.course.slice(0, 1)}</span>
@@ -124,10 +181,24 @@ export default function App() {
                     <strong>{conversation.course}</strong>
                     <time>{conversation.updatedAt}</time>
                   </span>
-                  <span className="instructor-name">{conversation.instructor}</span>
+                  <span className="instructor-name">
+                    {role === 'Student' ? conversation.instructor : DEMO_STUDENT_NAME}
+                  </span>
                   <span className="preview">{conversation.preview}</span>
                   <span className="card-badges">
-                    <span className={`status status-${conversation.status.toLowerCase()}`}>{conversation.resolved ? 'Resolved' : conversation.status}</span>
+                    <span className={`status ${
+                      conversation.resolved
+                        ? 'status-resolved'
+                        : (role === 'Student' ? conversation.unreadForStudent : conversation.unreadForInstructor)
+                          ? 'status-new'
+                          : `status-${conversation.status.toLowerCase()}`
+                    }`}>
+                      {conversation.resolved
+                        ? 'Resolved'
+                        : (role === 'Student' ? conversation.unreadForStudent : conversation.unreadForInstructor)
+                          ? role === 'Student' ? 'New reply' : 'New message'
+                          : conversation.status}
+                    </span>
                     {conversation.urgent && <span className="urgent-badge">Urgent</span>}
                   </span>
                 </span>
@@ -146,22 +217,31 @@ export default function App() {
               <div className="thread-heading">
                 <button className="back-button" onClick={() => setActiveId(null)}>← <span>Inbox</span></button>
                 <span className="course-pill">{active.course}</span>
-                <h2>{active.instructor}</h2>
-                <p>Course instructor</p>
-                <div className="availability-row">
-                  <span className={`availability-dot ${active.availability.toLowerCase()}`} aria-hidden="true" />
-                  <span>{active.availability}</span>
-                </div>
-                {active.availability === 'Away' && (
-                  <p className="away-note">This instructor is away; replies may be delayed.</p>
+                <h2>{role === 'Student' ? active.instructor : DEMO_STUDENT_NAME}</h2>
+                <p>{role === 'Student' ? 'Course instructor' : 'Student · fictional demo account'}</p>
+                {role === 'Student' && (
+                  <>
+                    <div className="availability-row">
+                      <span className={`availability-dot ${active.availability.toLowerCase()}`} aria-hidden="true" />
+                      <span>{active.availability}</span>
+                    </div>
+                    {active.availability === 'Away' && (
+                      <p className="away-note">This instructor is away; replies may be delayed.</p>
+                    )}
+                  </>
                 )}
                 {active.resolved && <p className="resolved-note">This conversation is resolved. You can still read its history.</p>}
               </div>
               <div className="message-list" aria-live="polite">
-                <p className="thread-date">Your conversation · {active.course}</p>
+                <p className="thread-date">
+                  {role === 'Student' ? 'Your conversation' : `Conversation with ${DEMO_STUDENT_NAME}`} · {active.course}
+                </p>
                 {active.messages.map((message) => (
-                  <article className={`message ${message.direction}`} key={message.id}>
-                    <span className="message-author">{message.author}</span>
+                  <article
+                    className={`message ${message.direction} ${isOutgoing(message.direction) ? 'outgoing' : ''}`}
+                    key={message.id}
+                  >
+                    <span className="message-author">{messageAuthor(message.direction, active.instructor)}</span>
                     <p>{message.body}</p>
                     <div className="message-meta">
                       <time>{message.time}</time>
@@ -169,7 +249,7 @@ export default function App() {
                     </div>
                   </article>
                 ))}
-                {active.waitingHours > 2 && active.status !== 'Replied' && !active.resolved && (
+                {role === 'Student' && active.waitingHours > 2 && active.status !== 'Replied' && !active.resolved && (
                   <div className="urgent-prompt">
                     <div>
                       <strong>Waiting over 2 hours</strong>
@@ -182,23 +262,27 @@ export default function App() {
                 )}
               </div>
               <div className="thread-actions">
-                {!active.resolved
+                {role === 'Instructor' && !active.resolved
                   ? <button className="resolve-button" onClick={markResolved}>Mark as resolved</button>
-                  : <span className="resolved-label">Resolved conversation</span>}
+                  : active.resolved ? <span className="resolved-label">Resolved conversation</span> : null}
               </div>
-              {!active.resolved && (
+              {!active.resolved && (role === 'Student' || canReplyToConversation(active, role)) && (
                 <form className="composer" onSubmit={sendMessage}>
-                  <label htmlFor="question">Ask a question about {active.course}</label>
+                  <label htmlFor="question">
+                    {role === 'Student' ? `Ask a question about ${active.course}` : `Reply to ${DEMO_STUDENT_NAME} · ${active.course}`}
+                  </label>
                   <textarea
                     id="question"
                     value={draft}
                     onChange={(event) => setDraft(event.target.value)}
-                    placeholder="Write your course question…"
+                    placeholder={role === 'Student' ? 'Write your course question…' : 'Write a reply…'}
                     rows={2}
                   />
                   <div className="composer-footer">
-                    <span>Tagged to {active.course}</span>
-                    <button type="submit" disabled={!draft.trim()}>Send question <span aria-hidden="true">↑</span></button>
+                    <span>{role === 'Student' ? `Tagged to ${active.course}` : `Replying in ${active.course}`}</span>
+                    <button type="submit" disabled={!draft.trim()}>
+                      {role === 'Student' ? 'Send question' : 'Send reply'} <span aria-hidden="true">↑</span>
+                    </button>
                   </div>
                 </form>
               )}
