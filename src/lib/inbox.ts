@@ -268,11 +268,10 @@ export function markConversationSeen(conversation: Conversation, reader: DemoRol
     return { ...conversation, unreadForStudent: false }
   }
 
-  const lastStudentMessageIndex = conversation.messages.findLastIndex((message) => message.direction === 'student')
   return {
     ...conversation,
-    messages: conversation.messages.map((message, index) =>
-      index === lastStudentMessageIndex && message.status === 'Sent' ? { ...message, status: 'Seen' as const } : message),
+    messages: conversation.messages.map((message) =>
+      message.direction === 'student' && message.status === 'Sent' ? { ...message, status: 'Seen' as const } : message),
     status: conversation.status === 'Sent' ? 'Seen' : conversation.status,
     unreadForInstructor: false,
   }

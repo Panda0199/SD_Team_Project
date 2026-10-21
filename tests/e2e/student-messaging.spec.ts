@@ -30,6 +30,29 @@ test('student can see Sent, Seen, and Replied conversation states', async ({ pag
   await expect(page.getByText('Sent', { exact: true }).first()).toBeVisible()
 })
 
+test('opening a thread marks all unanswered student messages as Seen', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/')
+  await page.getByRole('button', { name: /Research Methods/ }).click()
+  const studentThread = page.getByRole('region', { name: 'Research Methods conversation' })
+
+  for (const question of ['First unanswered question?', 'Second unanswered question?']) {
+    await page.getByLabel('Ask a question about Research Methods').fill(question)
+    await page.getByRole('button', { name: 'Send question' }).click()
+    const message = studentThread.locator('article').filter({ hasText: question })
+    await expect(message.getByText('Sent', { exact: true })).toBeVisible()
+  }
+
+  await page.getByRole('button', { name: 'Instructor', exact: true }).click()
+  await page.getByRole('button', { name: /Research Methods/ }).click()
+  const instructorThread = page.getByRole('region', { name: 'Research Methods conversation' })
+  for (const question of ['First unanswered question?', 'Second unanswered question?']) {
+    const message = instructorThread.locator('article').filter({ hasText: question })
+    await expect(message.getByText('Seen', { exact: true })).toBeVisible()
+    await expect(message.getByText('Sent', { exact: true })).toHaveCount(0)
+  }
+})
+
 test('away availability and the two-hour urgent flag are visible to students', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
@@ -133,7 +156,7 @@ test('student message becomes an instructor notification and reply returns to th
   await instructorCard.click()
 
   const instructorThread = page.getByRole('region', { name: 'Business Statistics conversation' })
-  await expect(instructorThread.getByText('Seen', { exact: true })).toBeVisible()
+  await expect(instructorThread.getByText('Seen', { exact: true }).last()).toBeVisible()
   await page.getByLabel('Reply to Jordan Doe · Business Statistics').fill('The median is the middle value in an ordered set.')
   await page.getByRole('button', { name: 'Send reply' }).click()
 
