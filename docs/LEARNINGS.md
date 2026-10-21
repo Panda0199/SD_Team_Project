@@ -6,3 +6,13 @@ Append three lines at the end of every session. Never rewrite earlier entries.
 - What worked:
 - What did not:
 - What we change next week:
+
+## Session · 21 Oct 2026
+- What worked: deterministic local AI-demo outputs can be shown separately without changing conversation messages.
+- What did not: derived content needs explicit demo labels and separate tests to prevent confusion with human messages.
+- What we change next week: assess real AI and audio requirements separately before selecting any provider or service.
+
+## Session · 21 Oct 2026 · Summary quality
+- What worked: extracting question clauses and understood context gives a more useful local summary than an opening excerpt.
+- What did not: relative clauses can resemble question clauses, so deterministic extraction needs sentence-context checks.
+- What we change next week: test summary phrasing against a broader set of fictional student questions.
