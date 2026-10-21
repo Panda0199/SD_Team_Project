@@ -21,6 +21,10 @@ npm run e2e                     # browser tests
 npm run a11y                    # accessibility check (session 9)
 ```
 
+## Supabase backend MVP
+
+The app uses Supabase when `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` are set in an uncommitted `.env.local`. Apply [`supabase/migrations/001_initial_schema.sql`](supabase/migrations/001_initial_schema.sql) in the Supabase SQL Editor first. The app uses email/password Supabase Auth; create each Auth user manually, then add its profile with the user's Auth UUID and one of the four roles. Admin profile and course management is persisted, but creating Auth credentials is intentionally not exposed in the browser. RLS restricts conversation data by profile role and course assignment. The E2E/a11y harness explicitly runs the fictional demo mode.
+
 ## Milestones
 1. date to be agreed: Requirements gate (G2) closed
 2. date to be agreed: Core messaging live

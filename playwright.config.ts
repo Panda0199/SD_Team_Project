@@ -1,7 +1,8 @@
 import { defineConfig } from '@playwright/test';
 
 // Tests run against your laptop by default. Set BASE_URL to test the live site instead.
-const baseURL = process.env.BASE_URL ?? 'http://localhost:5173';
+const baseURL = process.env.BASE_URL ?? 'http://127.0.0.1:5174';
+if (!process.env.BASE_URL) process.env.VITE_DEMO_MODE = 'true';
 
 export default defineConfig({
   reporter: [['list'], ['html', { open: 'never' }]],
@@ -14,5 +15,5 @@ export default defineConfig({
   ],
   webServer: process.env.BASE_URL
     ? undefined
-    : { command: 'npm run dev', url: baseURL, reuseExistingServer: true, timeout: 120_000 },
+    : { command: 'npm run dev -- --host 127.0.0.1 --port 5174 --strictPort', url: baseURL, reuseExistingServer: true, timeout: 120_000 },
 });

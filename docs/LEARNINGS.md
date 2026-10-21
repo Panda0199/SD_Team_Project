@@ -21,3 +21,8 @@ Append three lines at the end of every session. Never rewrite earlier entries.
 - What worked: Playwright browser testing found a bug in the instructor read flow for a conversation with multiple student questions; expected behavior is that every unanswered question becomes Seen.
 - What did not: reproducing two student questions and opening the thread as Instructor showed only the latest message became Seen; earlier unanswered messages stayed Sent.
 - What we changed: `markConversationSeen` now marks all Sent student messages Seen. Regression coverage is in `src/lib/inbox.test.ts` and `tests/e2e/student-messaging.spec.ts`.
+
+## Session · 21 Oct 2026 · Supabase backend MVP
+- What worked: a relational schema, RLS policies, email/password sign-in, and persisted data mapping connect the existing role-based UI without a service-role key or Edge Function.
+- What did not: the empty Supabase project has no Auth users or schema yet, so live persistence and cross-account flows cannot be exercised until the migration and sample users are added.
+- What we change next: apply the migration, create the four role accounts/profile rows, seed course assignments, and validate the live Student/Instructor/TA/Admin flows.

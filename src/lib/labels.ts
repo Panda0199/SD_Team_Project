@@ -102,6 +102,19 @@ const words = {
   instructorLabel: ['Instructor', 'Õppejõud'],
   taLabel: ['TA', 'Õppeassistent'],
   fictionalNameHint: ['Use fictional demo details only.', 'Kasuta ainult väljamõeldud demoandmeid.'],
+  signIn: ['Sign in to Quickly', 'Logi Quickly rakendusse sisse'],
+  email: ['Email', 'E-post'],
+  password: ['Password', 'Parool'],
+  signInButton: ['Sign in', 'Logi sisse'],
+  signOut: ['Sign out', 'Logi välja'],
+  signingIn: ['Signing in…', 'Sisselogimine…'],
+  authRequired: ['Sign in with your university account.', 'Logi sisse ülikooli kontoga.'],
+  profileMissing: ['This account has no Quickly profile yet. Ask an administrator to add your profile.', 'Sellel kontol pole veel Quickly profiili. Palu administraatoril profiil lisada.'],
+  authEmailPassword: ['Enter your email and password.', 'Sisesta e-post ja parool.'],
+  authUserId: ['Existing Auth user ID', 'Olemasoleva Auth kasutaja ID'],
+  authProfileNote: ['Create this account first in Supabase Authentication, then enter its user ID here. This form does not create login credentials.', 'Loo esmalt konto Supabase Authenticationis ja sisesta siia kasutaja ID. See vorm sisselogimisandmeid ei loo.'],
+  availabilityToggle: ['Available for replies', 'Vastamiseks saadaval'],
+  loadError: ['Could not load Quickly data.', 'Quickly andmete laadimine ebaõnnestus.'],
 } as const
 
 export type LabelKey = keyof typeof words
