@@ -3,6 +3,117 @@ export type InstructorAvailability = 'Available' | 'Away'
 export type ConversationFilter = 'Active' | 'Resolved'
 export type DemoRole = 'Student' | 'Instructor' | 'Teaching Assistant' | 'Admin'
 export type ReplyRole = 'Instructor' | 'Teaching Assistant'
+export const DEMO_SUMMARY_THRESHOLD = 180
+export const VOICE_MESSAGE_DEMO_TRANSCRIPT = 'I would like help understanding the next step for this course project.'
+
+export function isLongStudentMessage(message: Message): boolean {
+  return message.direction === 'student' && message.body.trim().length >= DEMO_SUMMARY_THRESHOLD
+}
+
+export function createDemoSummary(body: string): string {
+  const normalized = body.trim().replace(/\s+/g, ' ').replace(/\s+([,.!?;:])/g, '$1')
+  if (!normalized) return 'Student is asking a course question.'
+
+  const context = normalized.match(/\bI understand(?: that)?\s+(.+?)(?=\s+but\b|[,;.!?]|$)/i)?.[1]
+  const assignment = normalized.match(/\b(assignment|project|task|exercise|paper|report|coursework)\b/i)?.[1]?.toLowerCase()
+  const understood = context
+    ? `understands ${context}${assignment && !context.toLowerCase().includes(assignment) ? ` of the ${assignment}` : ''}`
+    : undefined
+  const clauses = extractQuestionClauses(normalized)
+  const compareMethods = /\bcompar(?:e|ing|ison)\b/i.test(normalized)
+  const questions = clauses
+    .map((clause) => normalizeQuestionClause(clause, compareMethods))
+    .filter((clause, index, all) => clause && all.indexOf(clause) === index)
+    .slice(0, 3)
+
+  if (questions.length) {
+    const questionSummary = joinPhrases(questions)
+    return understood
+      ? `Student ${understood} but is unsure ${questionSummary}.`
+      : `Student is unsure about ${questionSummary}.`
+  }
+
+  const problemSentence = normalized
+    .split(/[.!?]+/)
+    .map((sentence) => sentence.trim())
+    .filter(Boolean)
+    .reduce((best, sentence) => problemScore(sentence) >= problemScore(best) ? sentence : best)
+  const problem = problemSentence
+    ?.replace(/^(?:could you please|can you|please)\s+(?:clarify|explain|help me understand)\s+/i, '')
+    .replace(/^(?:I am|I'm|I feel)\s+(?:confused|unsure|unclear|struggling)\s+(?:about|with)?\s*/i, '')
+    .replace(/\bI am not sure\b/gi, 'the student is unsure')
+    .replace(/\bI don't understand\b/gi, 'the student does not understand')
+    .replace(/\bI should\b/gi, 'to')
+    .trim()
+  if (!problem) return 'Student is asking a course question.'
+
+  const words = problem.split(/\s+/)
+  const conciseProblem = words.length > 23 ? `${words.slice(0, 23).join(' ')}…` : problem
+  return `Student needs help with ${conciseProblem}.`
+}
+
+function extractQuestionClauses(text: string): string[] {
+  const clauses: string[] = []
+  for (const sentence of text.split(/[.!?]+/)) {
+    const starts = [...sentence.matchAll(/\b(?:which|what|how|where|when|whether)\s+/gi)]
+    starts.forEach((match, index) => {
+      const start = match.index ?? 0
+      const precedingText = sentence.slice(0, start)
+      if (match[0].toLowerCase().startsWith('where') && precedingText.trim()
+        && !/\b(?:not sure|unsure|unclear|confused|wondering)\s+(?:about\s+)?$/i.test(precedingText)) return
+      let end = sentence.length
+      for (let next = index + 1; next < starts.length; next += 1) {
+        const nextStart = starts[next].index ?? sentence.length
+        if (/\b(?:and|or)\s*$/i.test(sentence.slice(start, nextStart))) {
+          end = sentence.slice(start, nextStart).replace(/\s+(?:and|or)\s*$/i, '').length + start
+          break
+        }
+      }
+      const clause = sentence.slice(start, end).trim().replace(/[,;:]+$/g, '')
+      if (clause) clauses.push(clause)
+    })
+  }
+  return clauses
+}
+
+function normalizeQuestionClause(clause: string, compareMethods: boolean): string {
+  let normalized = clause
+    .replace(/^what kind of\s+/i, 'what ')
+    .replace(/\bshould be used\b/i, 'to use')
+    .replace(/\bI should\b/gi, 'to')
+    .replace(/\bI continue\b/gi, 'continuing')
+    .replace(/\bI am\b/gi, 'the student is')
+    .replace(/\bI have\b/gi, 'the student has')
+    .replace(/\s+/g, ' ')
+    .trim()
+  if (compareMethods) normalized = normalized.replace(/^which method\b/i, 'which comparison method')
+  return normalized.charAt(0).toLowerCase() + normalized.slice(1)
+}
+
+function joinPhrases(phrases: string[]): string {
+  if (phrases.length === 1) return phrases[0]
+  if (phrases.length === 2) return `${phrases[0]} and ${phrases[1]}`
+  return `${phrases.slice(0, -1).join(', ')}, and ${phrases[phrases.length - 1]}`
+}
+
+function problemScore(sentence: string): number {
+  return (sentence.match(/\b(confused|unsure|unclear|struggling|problem|issue|help|question|clarify|understand|not sure)\b/gi) ?? []).length
+}
+
+export function explainDemoReplySimply(body: string): string {
+  const simplerWords: Array<[RegExp, string]> = [
+    [/\bin order to\b/gi, 'to'],
+    [/\bprior to\b/gi, 'before'],
+    [/\bsubsequently\b/gi, 'later'],
+    [/\bapproximately\b/gi, 'about'],
+    [/\bdemonstrates\b/gi, 'shows'],
+    [/\bsufficient\b/gi, 'enough'],
+    [/\butilize\b/gi, 'use'],
+    [/\btherefore\b/gi, 'so'],
+  ]
+  const simplified = simplerWords.reduce((text, [pattern, replacement]) => text.replace(pattern, replacement), body.trim())
+  return `In simpler words: ${simplified}`
+}
 
 export type ProfileRole = Exclude<DemoRole, 'Admin'>
 export interface DemoProfile { id: string; name: string; demoId: string; role: ProfileRole }

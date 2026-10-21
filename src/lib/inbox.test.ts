@@ -3,8 +3,10 @@ import {
   appendConversationMessage,
   canReplyToConversation,
   createCourseGroupConversations,
+  createDemoSummary,
   createDemoCourseGroup,
   createDemoProfile,
+  explainDemoReplySimply,
   conversationsForRole,
   createReplyMessage,
   createStudentMessage,
@@ -14,12 +16,62 @@ import {
   initialConversations,
   initialDemoCourseGroups,
   initialDemoProfiles,
+  isLongStudentMessage,
   markConversationSeen,
   resolveConversation,
 } from './inbox'
 import { label } from './labels'
 
 describe('local inbox data', () => {
+  it('creates local AI demo derivations without changing or sending human messages', () => {
+    const originalBody = 'Please explain the assignment. I have reviewed the requirements and need help understanding the next step. '.repeat(3)
+    const original = createStudentMessage('long-question', 'Research Methods', originalBody)
+    const before = { ...original }
+    expect(isLongStudentMessage(original)).toBe(true)
+    expect(isLongStudentMessage(createStudentMessage('short-question', 'Research Methods', 'One quick question?'))).toBe(false)
+
+    const summary = createDemoSummary(original.body)
+    expect(summary).toContain('Student needs help')
+    expect(summary.length).toBeLessThan(original.body.length)
+    expect(original).toEqual(before)
+
+    const reply = 'Utilize the outline prior to commencing your work.'
+    expect(explainDemoReplySimply(reply)).toBe('In simpler words: use the outline before commencing your work.')
+    expect(reply).toBe('Utilize the outline prior to commencing your work.')
+    expect(label('EN', 'aiSummaryLabel')).toBe('AI summary · Demo')
+    expect(label('EN', 'aiExplanationLabel')).toBe('AI explanation · Demo')
+    expect(label('EN', 'transcriptLabel')).toBe('Transcript · Demo')
+    expect(label('EN', 'voiceDemoNotice')).toContain('No audio is recorded or uploaded')
+    expect(label('ET', 'aiSummaryLabel')).toBe('AI kokkuvõte · Demo')
+    expect(label('ET', 'aiExplanationLabel')).toBe('AI selgitus · Demo')
+    expect(label('ET', 'transcriptLabel')).toBe('Transkriptsioon · Demo')
+  })
+
+  it('extracts the question and problem details instead of truncating a long message opening', () => {
+    const body = 'I am working on the next assignment and I understand the first part, but I am confused about the second section where we need to compare the methods. I am not sure which method should be used and what kind of example I should include. Could you please clarify what I should focus on before I continue?'
+    const original = createStudentMessage('comparison-question', 'Research Methods', body)
+    const originalBody = original.body
+    const summary = createDemoSummary(original.body)
+
+    expect(summary.length).toBeLessThan(body.length)
+    expect(summary).not.toBe(`Key point: ${body.slice(0, 18)}…`)
+    expect(summary).not.toContain(body.slice(0, 90))
+    expect(summary).toContain('first part')
+    expect(summary).toContain('assignment')
+    expect(summary).toContain('comparison method')
+    expect(summary).toContain('example')
+    expect(summary).toContain('focus on before continuing')
+    expect(summary.split(/\s+/).length).toBeGreaterThanOrEqual(15)
+    expect(summary.split(/\s+/).length).toBeLessThanOrEqual(30)
+    expect(original.body).toBe(originalBody)
+
+    const secondQuestion = 'I am preparing my research report and have read the instructions, but I am unsure how many sources are required. I also do not know whether the references count toward the word limit. Could you clarify what should be included in the appendix before I submit?'
+    const secondSummary = createDemoSummary(secondQuestion)
+    expect(secondSummary).toContain('sources')
+    expect(secondSummary).toContain('references')
+    expect(secondSummary).toContain('appendix')
+  })
+
   it('provides fictional course conversations with visible message statuses', () => {
     expect(initialConversations.map(({ status }) => status)).toEqual(['Replied', 'Seen', 'Sent', 'Replied'])
     expect(initialConversations.every((conversation) => conversation.messages.every((message) => message.course === conversation.course))).toBe(true)

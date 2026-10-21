@@ -5,7 +5,10 @@ import {
   appendConversationMessage,
   canReplyToConversation,
   conversationsForRole,
+  createDemoSummary,
   createCourseGroupConversations,
+  explainDemoReplySimply,
+  isLongStudentMessage,
   createStudentMessage,
   createReplyMessage,
   demoProfileIdForRole,
@@ -34,6 +37,9 @@ export default function App() {
   const [language, setLanguage] = useState<Language>('EN')
   const [activeId, setActiveId] = useState<string | null>(null)
   const [draft, setDraft] = useState('')
+  const [demoSummaries, setDemoSummaries] = useState<Record<string, string>>({})
+  const [demoExplanations, setDemoExplanations] = useState<Record<string, string>>({})
+  const [showVoiceDemo, setShowVoiceDemo] = useState(false)
   const [filter, setFilter] = useState<ConversationFilter>('Active')
   const [query, setQuery] = useState('')
   useEffect(() => {
@@ -79,11 +85,20 @@ export default function App() {
   function openConversation(conversation: Conversation) {
     setActiveId(conversation.id)
     setDraft('')
+    setShowVoiceDemo(false)
     setConversations((current) =>
       current.map((item) =>
         item.id === conversation.id ? markConversationSeen(item, role) : item,
       ),
     )
+  }
+
+  function generateSummary(message: Message) {
+    setDemoSummaries((current) => ({ ...current, [message.id]: createDemoSummary(message.body) }))
+  }
+
+  function explainReply(message: Message) {
+    setDemoExplanations((current) => ({ ...current, [message.id]: explainDemoReplySimply(message.body) }))
   }
 
   function sendMessage(event: FormEvent<HTMLFormElement>) {
@@ -277,17 +292,46 @@ export default function App() {
                 {active.messages.length === 0
                   ? <p className="thread-empty-copy">{t('noMessagesYet')}</p>
                   : active.messages.map((message) => (
-                  <article
-                    className={`message ${message.direction} ${isOutgoing(message.direction) ? 'outgoing' : ''}`}
-                    key={message.id}
-                  >
-                    <span className="message-author">{messageAuthor(message.direction, active.instructor, message.author)}</span>
-                    <p>{message.body}</p>
-                    <div className="message-meta">
-                      <time>{message.time}</time>
-                      {message.status && <span className={`status status-${message.status.toLowerCase()}`}>{statusLabel(message.status)}</span>}
-                    </div>
-                  </article>
+                  <div className={`message-group${isOutgoing(message.direction) ? ' outgoing-group' : ''}`} key={message.id}>
+                    <article className={`message ${message.direction} ${isOutgoing(message.direction) ? 'outgoing' : ''}`}>
+                      <span className="message-author">{messageAuthor(message.direction, active.instructor, message.author)}</span>
+                      <p>{message.body}</p>
+                      <div className="message-meta">
+                        <time>{message.time}</time>
+                        {message.status && <span className={`status status-${message.status.toLowerCase()}`}>{statusLabel(message.status)}</span>}
+                      </div>
+                    </article>
+                    {role !== 'Student' && isLongStudentMessage(message) && (
+                      <div className="derived-actions">
+                        {!demoSummaries[message.id] && <button type="button" onClick={() => generateSummary(message)}>{t('generateSummary')}</button>}
+                        {demoSummaries[message.id] && (
+                          <section className="derived-panel" aria-label={t('aiSummaryLabel')}>
+                            <strong>{t('aiSummaryLabel')}</strong>
+                            <p>{demoSummaries[message.id]}</p>
+                            <small>{t('aiSummaryNote')}</small>
+                          </section>
+                        )}
+                      </div>
+                    )}
+                    {role === 'Student' && (message.direction === 'instructor' || message.direction === 'ta') && (
+                      <div className="derived-actions">
+                        {!demoExplanations[message.id] && <button type="button" onClick={() => explainReply(message)}>{t('explainSimply')}</button>}
+                        {demoExplanations[message.id] && (
+                          <section className="derived-panel" aria-label={t('aiExplanationLabel')}>
+                            <strong>{t('aiExplanationLabel')}</strong>
+                            <p>{demoExplanations[message.id]}</p>
+                          </section>
+                        )}
+                      </div>
+                    )}
+                    {role === 'Student' && demoSummaries[message.id] && (
+                      <section className="derived-panel shared-summary" aria-label={t('aiSummaryLabel')}>
+                        <strong>{t('aiSummaryLabel')}</strong>
+                        <p>{demoSummaries[message.id]}</p>
+                        <small>{t('aiSummaryNote')}</small>
+                      </section>
+                    )}
+                  </div>
                 ))}
                 {role === 'Student' && active.waitingHours > 2 && active.status !== 'Replied' && !active.resolved && (
                   <div className="urgent-prompt">
@@ -299,6 +343,15 @@ export default function App() {
                       ? <span className="urgent-badge" role="status">{t('urgent')}</span>
                       : <button onClick={markUrgent}>{t('flagUrgent')}</button>}
                   </div>
+                )}
+                {showVoiceDemo && (
+                  <section className="voice-demo-preview" role="status">
+                    <strong>{t('voiceMessageLabel')}</strong>
+                    <div className="voice-demo-wave" aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /></div>
+                    <strong>{t('transcriptLabel')}</strong>
+                    <p>{t('demoTranscript')}</p>
+                    <small>{t('voiceDemoNotice')}</small>
+                  </section>
                 )}
               </div>
               <div className="thread-actions">
@@ -324,6 +377,11 @@ export default function App() {
                       {role === 'Student' ? t('sendQuestion') : t('sendReply')} <span aria-hidden="true">↑</span>
                     </button>
                   </div>
+                  {(role === 'Student' || role === 'Instructor') && (
+                    <button className="voice-demo-toggle" type="button" onClick={() => setShowVoiceDemo((visible) => !visible)}>
+                      {showVoiceDemo ? t('hideVoiceDemo') : t('voiceMessageDemo')}
+                    </button>
+                  )}
                 </form>
               )}
             </>
