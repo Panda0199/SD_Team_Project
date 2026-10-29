@@ -95,6 +95,11 @@ describe('local inbox data', () => {
     expect(urgent.urgent).toBe(true)
     expect(flagConversationUrgent(initialConversations[0])).toBe(initialConversations[0])
   })
+  it('flags an unanswered conversation after the two-hour boundary', () => {
+    const waiting = initialConversations.find(({ id }) => id === 'statistics')!
+    expect(flagConversationUrgent({ ...waiting, waitingHours: 1.5 }).urgent).toBe(false)
+    expect(flagConversationUrgent({ ...waiting, waitingHours: 2 + 10 / 60 }).urgent).toBe(true)
+  })
   it('resolves a conversation without removing its message history', () => {
     const conversation = initialConversations.find(({ id }) => id === 'research')!
     const resolved = resolveConversation(conversation)
