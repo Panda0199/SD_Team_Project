@@ -2,9 +2,9 @@
 
 ## Current automated evidence
 
-- Latest successful main CI run: [GitHub Actions run 39587965224](https://github.com/Panda0199/SD_Team_Project/actions/runs/39587965224)
-- CI result: `main` branch, successful, Playwright Chromium, 12 tests passed.
-- Unit result: `npm test`, 14 tests passed.
+- Latest successful main CI run: [GitHub Actions run 39653178353](https://github.com/Panda0199/SD_Team_Project/actions/runs/39653178353)
+- CI result: green run on `main` from 21 Oct 2026; Playwright Chromium, 14 tests passed.
+- Unit result: `npm test`, 21 tests passed.
 - [End-to-end test folder](https://github.com/Panda0199/SD_Team_Project/tree/main/tests/e2e)
 
 | Story | End-to-end test file | Unit tests | Status |
