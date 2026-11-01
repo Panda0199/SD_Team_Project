@@ -343,7 +343,7 @@ export function filterConversations(
   searchField: ConversationSearchField = 'all',
 ): Conversation[] {
   const normalizedQuery = query.trim().toLocaleLowerCase()
-  return conversations.filter((conversation) => {
+  const matchingConversations = conversations.filter((conversation) => {
     const matchesFilter = filter === 'Resolved' ? conversation.resolved : !conversation.resolved
     const searchableText = searchField === 'course'
       ? conversation.course
@@ -352,6 +352,18 @@ export function filterConversations(
         : [conversation.course, conversation.instructor, ...conversation.messages.map((message) => message.body)].join(' ')
     return matchesFilter && (!normalizedQuery || searchableText.toLocaleLowerCase().includes(normalizedQuery))
   })
+
+  if (!normalizedQuery) return matchingConversations
+
+  return matchingConversations
+    .map((conversation, index) => {
+      const score = (searchField !== 'instructor' && conversation.course.toLocaleLowerCase().includes(normalizedQuery) ? 3 : 0)
+        + (searchField !== 'course' && conversation.instructor.toLocaleLowerCase().includes(normalizedQuery) ? 2 : 0)
+        + (searchField === 'all' && conversation.messages.some((message) => message.body.toLocaleLowerCase().includes(normalizedQuery)) ? 1 : 0)
+      return { conversation, index, score }
+    })
+    .sort((left, right) => right.score - left.score || left.index - right.index)
+    .map(({ conversation }) => conversation)
 }
 
 export const initialConversations: Conversation[] = [

@@ -127,6 +127,55 @@ describe('local inbox data', () => {
     expect(filterConversations(initialConversations, 'Active', 'no match')).toHaveLength(0)
   })
 
+  it('ranks a course match above a message-only match', () => {
+    const courseMatch = {
+      ...initialConversations[0],
+      id: 'course-match',
+      course: 'Query Course',
+      instructor: 'Another instructor',
+      messages: initialConversations[0].messages.map((message) => ({ ...message, body: 'No match' })),
+    }
+    const messageMatch = {
+      ...initialConversations[1],
+      id: 'message-match',
+      course: 'Another course',
+      instructor: 'Another instructor',
+      messages: initialConversations[1].messages.map((message) => ({ ...message, body: 'The query appears here' })),
+    }
+
+    expect(filterConversations([messageMatch, courseMatch], 'Active', 'query').map(({ id }) => id))
+      .toEqual(['course-match', 'message-match'])
+  })
+
+  it('keeps the original order for conversations with equal relevance', () => {
+    const first = { ...initialConversations[0], id: 'first', course: 'Query Course A' }
+    const second = { ...initialConversations[1], id: 'second', course: 'Query Course B' }
+
+    expect(filterConversations([first, second], 'Active', 'query', 'course').map(({ id }) => id))
+      .toEqual(['first', 'second'])
+  })
+
+  it('preserves the filtered input order when the query is empty', () => {
+    const conversations = [...initialConversations].reverse()
+    const originalOrder = conversations.map(({ id }) => id)
+
+    expect(filterConversations(conversations, 'Active', '').map(({ id }) => id))
+      .toEqual(['statistics', 'writing', 'research'])
+    expect(conversations.map(({ id }) => id)).toEqual(originalOrder)
+  })
+
+  it('keeps the same matching conversations for each searchable field', () => {
+    expect(filterConversations(initialConversations, 'Active', 'Karin').map(({ id }) => id))
+      .toEqual(['statistics'])
+    expect(filterConversations(initialConversations, 'Active', 'open-ended').map(({ id }) => id))
+      .toEqual(['research'])
+    expect(filterConversations(initialConversations, 'Active', 'Research', 'course').map(({ id }) => id))
+      .toEqual(['research'])
+    expect(filterConversations(initialConversations, 'Active', 'Karin', 'instructor').map(({ id }) => id))
+      .toEqual(['statistics'])
+    expect(filterConversations(initialConversations, 'Active', 'open-ended', 'instructor')).toEqual([])
+  })
+
   it('shows waiting status only while the latest student message needs a reply', () => {
     const sent = initialConversations.find(({ id }) => id === 'statistics')!
     expect(isWaitingForReply(sent)).toBe(true)
