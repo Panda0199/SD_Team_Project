@@ -5,7 +5,7 @@ vi.mock('./supabase', () => ({
   requireSupabase: () => ({ functions: { invoke } }),
 }))
 
-import { createAccount, mapDatabaseWorkspace } from './backend'
+import { createAccount, deleteAccount, mapDatabaseWorkspace } from './backend'
 
 describe('Supabase workspace mapping', () => {
   it('maps persisted course conversations and role/status fields to the existing UI model', () => {
@@ -79,6 +79,18 @@ describe('Supabase account creation', () => {
         password: 'secret1',
         role: 'Student',
       },
+    })
+  })
+
+  describe('Supabase account deletion', () => {
+    it('invokes the admin Edge Function with the target user ID', async () => {
+      invoke.mockResolvedValue({ data: { success: true }, error: null })
+
+      await deleteAccount('user-123')
+
+      expect(invoke).toHaveBeenCalledWith('admin-delete-user', {
+        body: { userId: 'user-123' },
+      })
     })
   })
 })

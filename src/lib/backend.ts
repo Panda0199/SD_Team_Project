@@ -223,6 +223,13 @@ export async function createAccount(input: {
   failIfError(error)
 }
 
+export async function deleteAccount(userId: string): Promise<void> {
+  const { error } = await requireSupabase().functions.invoke('admin-delete-user', {
+    body: { userId },
+  })
+  failIfError(error)
+}
+
 export async function createCourse(input: { name: string; instructorId: string; studentIds: string[]; taId: string }): Promise<void> {
   const { error } = await requireSupabase().rpc('create_course_group', {
     p_name: input.name.trim(),

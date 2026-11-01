@@ -13,10 +13,11 @@ interface Props {
   setGroups: Dispatch<SetStateAction<DemoCourseGroup[]>>
   backendMode?: boolean
   onCreateAccount?: (input: { universityId: string; name: string; password: string; role: DemoRole }) => Promise<void>
+  onDeleteAccount?: (userId: string) => Promise<void>
   onCreateCourse?: (input: { name: string; instructorId: string; studentIds: string[]; taId: string }) => Promise<void>
 }
 
-export default function AdminWorkspace({ language, profiles, setProfiles, groups, setGroups, backendMode = false, onCreateAccount, onCreateCourse }: Props) {
+export default function AdminWorkspace({ language, profiles, setProfiles, groups, setGroups, backendMode = false, onCreateAccount, onDeleteAccount, onCreateCourse }: Props) {
   const [name, setName] = useState('')
   const [demoId, setDemoId] = useState('')
   const [password, setPassword] = useState('')
@@ -28,6 +29,17 @@ export default function AdminWorkspace({ language, profiles, setProfiles, groups
   const [message, setMessage] = useState('')
   const t = (key: Parameters<typeof label>[1]) => label(language, key)
   const byRole = (role: ProfileRole) => profiles.filter((profile) => profile.role === role)
+
+  async function deleteProfile(profile: DemoProfile) {
+    if (!backendMode || profile.role === 'Admin' || !onDeleteAccount) return
+    if (!window.confirm(t('confirmDeleteAccount').replace('{name}', profile.name))) return
+    try {
+      await onDeleteAccount(profile.id)
+      setMessage(t('accountDeleted'))
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : String(error))
+    }
+  }
 
   async function addProfile(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -84,6 +96,7 @@ export default function AdminWorkspace({ language, profiles, setProfiles, groups
               <div className="profile-row" key={profile.id}>
                 <span><strong>{profile.name}</strong><small>{profile.demoId}</small></span>
                 <span className="role-chip">{profile.role === 'Student' ? t('student') : profile.role === 'Instructor' ? t('instructor') : profile.role === 'Admin' ? t('admin') : t('assistant')}</span>
+                {backendMode && profile.role !== 'Admin' && <button type="button" onClick={() => void deleteProfile(profile)}>{t('delete')}</button>}
               </div>
             ))}
           </div>
