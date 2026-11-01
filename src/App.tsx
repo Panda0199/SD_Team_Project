@@ -5,6 +5,7 @@ import {
   createAccount as createPersistedAccount,
   createCourse as createPersistedCourse,
   currentSession,
+  deleteAccount as deletePersistedAccount,
   loadWorkspace,
   markConversationSeen as markPersistedConversationSeen,
   sendMessage as sendPersistedMessage,
@@ -406,6 +407,7 @@ export default function App() {
       {role === 'Admin' ? <AdminWorkspace language={language} profiles={profiles} setProfiles={setProfiles} groups={courseGroups} setGroups={setCourseGroups}
         backendMode={supabaseConfigured}
         onCreateAccount={async (input) => { await createPersistedAccount(input); await refreshBackendWorkspace() }}
+        onDeleteAccount={async (userId) => { await deletePersistedAccount(userId); await refreshBackendWorkspace() }}
         onCreateCourse={async (input) => { await createPersistedCourse(input); await refreshBackendWorkspace() }} /> : <main className={`workspace${active ? ' conversation-open' : ''}`}>
         <aside className="inbox-panel" aria-label={t('inbox')}>
           <div className="panel-heading">
