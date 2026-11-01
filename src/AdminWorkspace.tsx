@@ -44,7 +44,7 @@ export default function AdminWorkspace({ language, profiles, setProfiles, groups
   async function addProfile(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (backendMode) {
-      if (!name.trim() || !demoId.trim() || !password || profileRole === 'Admin' || !onCreateAccount) { setMessage(t('required')); return }
+      if (!name.trim() || !demoId.trim() || !password || !onCreateAccount) { setMessage(t('required')); return }
       try {
         await onCreateAccount({ universityId: demoId.trim(), name: name.trim(), password, role: profileRole })
         setName(''); setDemoId(''); setPassword(''); setMessage(t('accountSaved'))
@@ -108,6 +108,7 @@ export default function AdminWorkspace({ language, profiles, setProfiles, groups
             <label>{t('profileType')}
               <select value={profileRole} onChange={(event) => setProfileRole(event.target.value as DemoProfile['role'])}>
                 <option value="Student">{t('student')}</option><option value="Instructor">{t('instructor')}</option><option value="Teaching Assistant">{t('assistant')}</option>
+                {backendMode && <option value="Admin">{t('admin')}</option>}
               </select>
             </label>
             <button className="admin-primary" type="submit">{t('create')}</button>

@@ -10,6 +10,7 @@ const databaseRole = {
   Student: "student",
   Instructor: "instructor",
   "Teaching Assistant": "teaching_assistant",
+  Admin: "admin",
 } as const
 
 function isSupportedRole(value: unknown): value is keyof typeof databaseRole {
@@ -66,11 +67,12 @@ Deno.serve(async (request) => {
     })
     const { data: callerProfile, error: profileLookupError } = await adminClient
       .from("profiles")
-      .select("role")
+      .select("role, institution_id")
       .eq("id", userData.user.id)
       .maybeSingle()
     if (profileLookupError) throw new RequestError("Could not verify administrator permissions.", 500)
     if (callerProfile?.role !== "admin") throw new RequestError("Only administrators can create accounts.", 403)
+    if (!callerProfile.institution_id) throw new RequestError("Your admin account has no institution assigned.", 403)
 
     let input: unknown
     try {
@@ -90,7 +92,19 @@ Deno.serve(async (request) => {
     }
     if (password.length < 6) throw new RequestError("Password must be at least 6 characters.", 400)
     if (!isSupportedRole(role)) {
-      throw new RequestError("Role must be Student, Instructor, or Teaching Assistant.", 400)
+      throw new RequestError("Role must be Student, Instructor, Teaching Assistant, or Admin.", 400)
+    }
+
+    if (role === "Admin") {
+      const { count, error: adminCountError } = await adminClient
+        .from("profiles")
+        .select("id", { count: "exact", head: true })
+        .eq("institution_id", callerProfile.institution_id)
+        .eq("role", "admin")
+      if (adminCountError) throw new RequestError("Could not verify institution administrator count.", 500)
+      if ((count ?? 0) >= 2) {
+        throw new RequestError("This institution already has the maximum of two administrators.", 409)
+      }
     }
 
     const email = `${universityId.toLowerCase()}@quickly.test`
@@ -111,6 +125,7 @@ Deno.serve(async (request) => {
       university_id: universityId,
       display_name: displayName,
       role: databaseRole[role],
+      institution_id: callerProfile.institution_id,
     })
     if (insertProfileError) {
       const { error: deleteUserError } = await adminClient.auth.admin.deleteUser(createdUser.user.id)
@@ -121,9 +136,12 @@ Deno.serve(async (request) => {
         )
       }
       const lowerMessage = insertProfileError.message.toLowerCase()
-      const status = insertProfileError.code === "23505" ? 409 : 400
+      const adminLimitReached = insertProfileError.code === "23514"
+      const status = insertProfileError.code === "23505" || adminLimitReached ? 409 : 400
       throw new RequestError(
-        lowerMessage.includes("duplicate") ? "That university ID already exists." : insertProfileError.message,
+        adminLimitReached
+          ? "This institution already has the maximum of two administrators."
+          : lowerMessage.includes("duplicate") ? "That university ID already exists." : insertProfileError.message,
         status,
       )
     }
