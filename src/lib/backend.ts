@@ -206,6 +206,23 @@ export async function createProfile(input: { id: string; universityId: string; n
   failIfError(error)
 }
 
+export async function createAccount(input: {
+  universityId: string
+  name: string
+  password: string
+  role: DemoRole
+}): Promise<void> {
+  const { error } = await requireSupabase().functions.invoke('admin-create-user', {
+    body: {
+      universityId: input.universityId,
+      displayName: input.name,
+      password: input.password,
+      role: input.role,
+    },
+  })
+  failIfError(error)
+}
+
 export async function createCourse(input: { name: string; instructorId: string; studentIds: string[]; taId: string }): Promise<void> {
   const { error } = await requireSupabase().rpc('create_course_group', {
     p_name: input.name.trim(),

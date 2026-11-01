@@ -1,7 +1,7 @@
 import { useState, type Dispatch, type FormEvent, type SetStateAction } from 'react'
 import {
   createDemoCourseGroup, createDemoProfile,
-  type DemoCourseGroup, type DemoProfile, type ProfileRole,
+  type DemoCourseGroup, type DemoProfile, type DemoRole, type ProfileRole,
 } from './lib/inbox'
 import { label, type Language } from './lib/labels'
 
@@ -12,14 +12,14 @@ interface Props {
   groups: DemoCourseGroup[]
   setGroups: Dispatch<SetStateAction<DemoCourseGroup[]>>
   backendMode?: boolean
-  onCreateProfile?: (input: { id: string; universityId: string; name: string; role: DemoProfile['role'] }) => Promise<void>
+  onCreateAccount?: (input: { universityId: string; name: string; password: string; role: DemoRole }) => Promise<void>
   onCreateCourse?: (input: { name: string; instructorId: string; studentIds: string[]; taId: string }) => Promise<void>
 }
 
-export default function AdminWorkspace({ language, profiles, setProfiles, groups, setGroups, backendMode = false, onCreateProfile, onCreateCourse }: Props) {
+export default function AdminWorkspace({ language, profiles, setProfiles, groups, setGroups, backendMode = false, onCreateAccount, onCreateCourse }: Props) {
   const [name, setName] = useState('')
   const [demoId, setDemoId] = useState('')
-  const [authUserId, setAuthUserId] = useState('')
+  const [password, setPassword] = useState('')
   const [profileRole, setProfileRole] = useState<DemoProfile['role']>('Student')
   const [course, setCourse] = useState('')
   const [instructorId, setInstructorId] = useState('')
@@ -32,10 +32,10 @@ export default function AdminWorkspace({ language, profiles, setProfiles, groups
   async function addProfile(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (backendMode) {
-      if (!authUserId.trim() || !name.trim() || !demoId.trim() || !onCreateProfile) { setMessage(t('required')); return }
+      if (!name.trim() || !demoId.trim() || !password || profileRole === 'Admin' || !onCreateAccount) { setMessage(t('required')); return }
       try {
-        await onCreateProfile({ id: authUserId.trim(), universityId: demoId.trim(), name: name.trim(), role: profileRole })
-        setName(''); setDemoId(''); setAuthUserId(''); setMessage(t('profileSaved'))
+        await onCreateAccount({ universityId: demoId.trim(), name: name.trim(), password, role: profileRole })
+        setName(''); setDemoId(''); setPassword(''); setMessage(t('accountSaved'))
       } catch (error) {
         setMessage(error instanceof Error ? error.message : String(error))
       }
@@ -73,7 +73,7 @@ export default function AdminWorkspace({ language, profiles, setProfiles, groups
         <p className="eyebrow">{t('adminSpace')}</p>
         <h1>{t('adminTitle')}</h1>
         <p>{t(backendMode ? 'adminIntroProduction' : 'adminIntro')}</p>
-        <p className="admin-demo-note">{t(backendMode ? 'authProfileNote' : 'demoSecurity')}</p>
+        {!backendMode && <p className="admin-demo-note">{t('demoSecurity')}</p>}
       </header>
       {message && <p className="form-feedback" role="status">{message}</p>}
       <div className="admin-grid">
@@ -88,14 +88,13 @@ export default function AdminWorkspace({ language, profiles, setProfiles, groups
             ))}
           </div>
           <form className="admin-form" onSubmit={addProfile}>
-            <h3>{t('createProfile')}</h3>
-            {backendMode && <label>{t('authUserId')}<input required value={authUserId} onChange={(event) => setAuthUserId(event.target.value)} /></label>}
+            <h3>{t(backendMode ? 'createAccount' : 'createProfile')}</h3>
             <label>{t('profileName')}<input required value={name} onChange={(event) => setName(event.target.value)} /></label>
             <label>{t(backendMode ? 'universityId' : 'demoId')}<input required value={demoId} onChange={(event) => setDemoId(event.target.value)} /></label>
+            {backendMode && <label>{t('password')}<input type="password" autoComplete="new-password" required minLength={6} value={password} onChange={(event) => setPassword(event.target.value)} /></label>}
             <label>{t('profileType')}
               <select value={profileRole} onChange={(event) => setProfileRole(event.target.value as DemoProfile['role'])}>
                 <option value="Student">{t('student')}</option><option value="Instructor">{t('instructor')}</option><option value="Teaching Assistant">{t('assistant')}</option>
-                {backendMode && <option value="Admin">{t('admin')}</option>}
               </select>
             </label>
             <button className="admin-primary" type="submit">{t('create')}</button>

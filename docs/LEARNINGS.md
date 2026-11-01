@@ -26,3 +26,8 @@ Append three lines at the end of every session. Never rewrite earlier entries.
 - What worked: a relational schema, RLS policies, email/password sign-in, and persisted data mapping connect the existing role-based UI without a service-role key or Edge Function.
 - What did not: the empty Supabase project has no Auth users or schema yet, so live persistence and cross-account flows cannot be exercised until the migration and sample users are added.
 - What we change next: apply the migration, create the four role accounts/profile rows, seed course assignments, and validate the live Student/Instructor/TA/Admin flows.
+
+## Session · 2 Nov 2026 · FR16 admin account creation
+- What worked: creating Auth users and matching profiles in a server-side Edge Function keeps secret credentials out of the browser.
+- What did not: live account creation cannot be validated without deploying the Edge Function to the connected Supabase project.
+- What we change next: deploy the function and verify an admin-created university ID can sign in.

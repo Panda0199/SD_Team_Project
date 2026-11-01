@@ -2,8 +2,8 @@ import { useEffect, useState, type FormEvent } from 'react'
 import AdminWorkspace from './AdminWorkspace'
 import { label, type Language, type LabelKey } from './lib/labels'
 import {
+  createAccount as createPersistedAccount,
   createCourse as createPersistedCourse,
-  createProfile as createPersistedProfile,
   currentSession,
   loadWorkspace,
   markConversationSeen as markPersistedConversationSeen,
@@ -405,7 +405,7 @@ export default function App() {
       {backendError && <p className="backend-error" role="alert">{backendError}</p>}
       {role === 'Admin' ? <AdminWorkspace language={language} profiles={profiles} setProfiles={setProfiles} groups={courseGroups} setGroups={setCourseGroups}
         backendMode={supabaseConfigured}
-        onCreateProfile={async (input) => { await createPersistedProfile(input); await refreshBackendWorkspace() }}
+        onCreateAccount={async (input) => { await createPersistedAccount(input); await refreshBackendWorkspace() }}
         onCreateCourse={async (input) => { await createPersistedCourse(input); await refreshBackendWorkspace() }} /> : <main className={`workspace${active ? ' conversation-open' : ''}`}>
         <aside className="inbox-panel" aria-label={t('inbox')}>
           <div className="panel-heading">
