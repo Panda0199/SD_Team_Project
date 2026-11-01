@@ -186,6 +186,18 @@ export interface Conversation {
   studentName?: string
 }
 
+export function setInstructorAvailability(
+  conversations: Conversation[],
+  instructorName: string,
+  availability: InstructorAvailability,
+): Conversation[] {
+  return conversations.map((conversation) =>
+    conversation.instructor === instructorName
+      ? { ...conversation, availability }
+      : conversation,
+  )
+}
+
 export function demoProfileIdForRole(role: DemoRole, profiles: DemoProfile[], groups: DemoCourseGroup[]): string | undefined {
   if (role === 'Student') {
     return profiles.find((profile) => profile.id === 'p1' && profile.role === role)?.id

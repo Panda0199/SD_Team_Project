@@ -30,6 +30,22 @@ test('student can see Sent, Seen, and Replied conversation states', async ({ pag
   await expect(page.getByText('Sent', { exact: true }).first()).toBeVisible()
 })
 
+test('instructor can set Away and students see the delayed-replies note', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Instructor', exact: true }).click()
+
+  const availability = page.getByRole('button', { name: 'Available', exact: true })
+  await expect(availability).toHaveAttribute('aria-pressed', 'true')
+  await availability.click()
+  await expect(page.getByRole('button', { name: 'Away', exact: true })).toHaveAttribute('aria-pressed', 'false')
+
+  await page.getByRole('button', { name: 'Student', exact: true }).click()
+  await page.getByRole('button', { name: /Research Methods/ }).click()
+  const conversation = page.getByRole('region', { name: 'Research Methods conversation' })
+  await expect(conversation.getByText('Away', { exact: true })).toBeVisible()
+  await expect(conversation.getByText('This instructor is away; replies may be delayed.')).toBeVisible()
+})
+
 test('opening a thread marks all unanswered student messages as Seen', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
