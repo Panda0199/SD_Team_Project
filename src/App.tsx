@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import AdminWorkspace from './AdminWorkspace'
 import { label, type Language, type LabelKey } from './lib/labels'
+import { toSignInEmail } from './lib/signIn'
 import {
   createAccount as createPersistedAccount,
   createCourse as createPersistedCourse,
@@ -157,7 +158,10 @@ export default function App() {
     setBackendError('')
     try {
       if (!supabase) throw new Error('Supabase is not configured.')
-      const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: toSignInEmail(email, import.meta.env.VITE_UNIVERSITY_EMAIL_DOMAIN || 'quickly.test'),
+        password,
+      })
       if (error) throw error
       if (!data.user) throw new Error('Supabase sign-in returned no user.')
       setAuthUserId(data.user.id)
@@ -363,7 +367,7 @@ export default function App() {
                 <p className="eyebrow">QUICKLY</p>
                 <h1>{t('signIn')}</h1>
                 <p>{t('authRequired')}</p>
-                <label>{t('email')}<input type="email" autoComplete="username" required value={email} onChange={(event) => setEmail(event.target.value)} /></label>
+                <label>{t('universityIdOrEmail')}<input type="text" autoComplete="username" required value={email} onChange={(event) => setEmail(event.target.value)} /></label>
                 <label>{t('password')}<input type="password" autoComplete="current-password" required value={password} onChange={(event) => setPassword(event.target.value)} /></label>
                 {backendError && <p className="auth-error" role="alert">{backendError}</p>}
                 <button className="admin-primary" type="submit" disabled={busy}>{busy ? t('signingIn') : t('signInButton')}</button>
