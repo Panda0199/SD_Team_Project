@@ -37,6 +37,7 @@ const words = {
   noSignIn: ['Demo only · not real access control', 'Ainult demo · mitte päris ligipääsukontroll'],
   scopeNote: ['This demo account can only access courses assigned to it. Other course conversations are unavailable in this demo.', 'See demokonto pääseb ligi ainult sellele määratud kursustele. Teised kursusevestlused pole demos saadaval.'],
   courseInstructor: ['Course instructor', 'Kursuse õppejõud'],
+  availabilityLabel: ['Availability', 'Saadavus'],
   studentDemo: ['Student · fictional demo account', 'Tudeng · väljamõeldud demokonto'],
   available: ['Available', 'Saadaval'],
   away: ['Away', 'Eemal'],

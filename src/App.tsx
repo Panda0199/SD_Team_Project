@@ -8,6 +8,7 @@ import {
   loadWorkspace,
   markConversationSeen as markPersistedConversationSeen,
   sendMessage as sendPersistedMessage,
+  setAvailability as setPersistedAvailability,
   setResolved as resolvePersistedConversation,
   setUrgent as flagPersistedConversationUrgent,
 } from './lib/backend'
@@ -32,10 +33,12 @@ import {
   initialConversations,
   markConversationSeen,
   resolveConversation,
+  setInstructorAvailability,
   type Conversation,
   type ConversationFilter,
   type ConversationSearchField,
   type DemoRole,
+  type InstructorAvailability,
   type Message,
   type DemoCourseGroup,
   type DemoProfile,
@@ -120,6 +123,9 @@ export default function App() {
   const roleConversations = conversationsForRole(conversations, role, courseGroups, demoProfileId)
   const visibleConversations = filterConversations(roleConversations, filter, query, searchField)
   const activeProfile = profiles.find((profile) => profile.id === demoProfileId && profile.role === role)
+  const instructorAvailability: InstructorAvailability = conversations.find(
+    (conversation) => conversation.instructor === activeProfile?.name,
+  )?.availability ?? 'Available'
   const visibleProfiles = profiles.filter((profile) => profile.role === role)
   const t = (key: LabelKey) => label(language, key)
   const roleKey = (value: DemoRole): LabelKey => value === 'Student' ? 'student' : value === 'Instructor' ? 'instructor' : value === 'Admin' ? 'admin' : 'assistant'
@@ -207,6 +213,26 @@ export default function App() {
     setDemoProfileId(profileId)
     setActiveId(null)
     setDraft('')
+  }
+
+  async function toggleInstructorAvailability() {
+    if (role !== 'Instructor' || !activeProfile) return
+    const nextAvailability: InstructorAvailability = instructorAvailability === 'Available' ? 'Away' : 'Available'
+    setBackendError('')
+    if (supabaseConfigured) {
+      if (!authUserId) return
+      setBusy(true)
+      try {
+        await setPersistedAvailability(authUserId, nextAvailability === 'Available')
+        setConversations((current) => setInstructorAvailability(current, activeProfile.name, nextAvailability))
+      } catch (error) {
+        setBackendError(error instanceof Error ? error.message : String(error))
+      } finally {
+        setBusy(false)
+      }
+      return
+    }
+    setConversations((current) => setInstructorAvailability(current, activeProfile.name, nextAvailability))
   }
 
   function openConversation(conversation: Conversation) {
@@ -392,6 +418,19 @@ export default function App() {
           <p className="panel-intro">
             {t(role === 'Student' ? 'yourConversations' : 'studentConversations')}
           </p>
+          {role === 'Instructor' && (
+            <div className="availability-toggle">
+              <span>{t('availabilityLabel')}</span>
+              <button
+                type="button"
+                aria-pressed={instructorAvailability === 'Available'}
+                onClick={() => void toggleInstructorAvailability()}
+                disabled={busy}
+              >
+                {t(instructorAvailability === 'Available' ? 'available' : 'away')}
+              </button>
+            </div>
+          )}
           {!supabaseConfigured && <><label className="demo-account-label" htmlFor="demo-account">{t('demoAccount')}</label>
           <select id="demo-account" className="demo-account-select" value={demoProfileId} onChange={(event) => selectDemoProfile(event.target.value)}>
             {visibleProfiles.map((profile) => <option key={profile.id} value={profile.id}>{profile.name}</option>)}

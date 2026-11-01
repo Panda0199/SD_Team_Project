@@ -20,6 +20,7 @@ import {
   isWaitingForReply,
   markConversationSeen,
   resolveConversation,
+  setInstructorAvailability,
 } from './inbox'
 import { label } from './labels'
 
@@ -76,6 +77,16 @@ describe('local inbox data', () => {
   it('provides fictional course conversations with visible message statuses', () => {
     expect(initialConversations.map(({ status }) => status)).toEqual(['Replied', 'Seen', 'Sent', 'Replied'])
     expect(initialConversations.every((conversation) => conversation.messages.every((message) => message.course === conversation.course))).toBe(true)
+  })
+
+  it('updates only the selected instructor availability', () => {
+    const conversations = [...initialConversations, { ...initialConversations[0], id: 'research-copy' }]
+    const updated = setInstructorAvailability(conversations, 'Dr. Lina Kask', 'Away')
+
+    expect(updated[0]).toEqual({ ...conversations[0], availability: 'Away' })
+    expect(updated.at(-1)).toEqual({ ...conversations.at(-1)!, availability: 'Away' })
+    expect(updated[1]).toBe(conversations[1])
+    expect(conversations[0].availability).toBe('Available')
   })
 
   it('creates a course-tagged student message in Sent state', () => {
