@@ -1,5 +1,11 @@
-import { describe, expect, it } from 'vitest'
-import { mapDatabaseWorkspace } from './backend'
+import { describe, expect, it, vi } from 'vitest'
+
+const invoke = vi.hoisted(() => vi.fn())
+vi.mock('./supabase', () => ({
+  requireSupabase: () => ({ functions: { invoke } }),
+}))
+
+import { createAccount, mapDatabaseWorkspace } from './backend'
 
 describe('Supabase workspace mapping', () => {
   it('maps persisted course conversations and role/status fields to the existing UI model', () => {
@@ -27,6 +33,7 @@ describe('Supabase workspace mapping', () => {
       course: 'Research Methods', instructor: 'Dr. Example', availability: 'Away',
       urgent: true, unreadForStudent: true, status: 'Replied',
     })
+
     expect(result.conversations[0].messages[0]).toMatchObject({
       author: 'Dr. Example', body: 'Use the assigned reading.', direction: 'instructor', status: 'Replied',
     })
@@ -51,5 +58,27 @@ describe('Supabase workspace mapping', () => {
       messages: [],
     }, 'admin-1')
     expect(result.profile.role).toBe('Admin')
+  })
+})
+
+describe('Supabase account creation', () => {
+  it('invokes the admin Edge Function with the account fields mapped to its request body', async () => {
+    invoke.mockResolvedValue({ data: { id: 'auth-user-1' }, error: null })
+
+    await createAccount({
+      universityId: ' S1001 ',
+      name: 'Student One',
+      password: 'secret1',
+      role: 'Student',
+    })
+
+    expect(invoke).toHaveBeenCalledWith('admin-create-user', {
+      body: {
+        universityId: ' S1001 ',
+        displayName: 'Student One',
+        password: 'secret1',
+        role: 'Student',
+      },
+    })
   })
 })
