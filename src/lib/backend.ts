@@ -113,6 +113,7 @@ export function mapDatabaseWorkspace(
       waitingHours,
       urgent: Boolean(row.urgent),
       resolved: Boolean(row.resolved),
+      taLoopedIn: Boolean(row.ta_looped_in),
       unreadForInstructor: Boolean(row.staff_unread),
       unreadForStudent: Boolean(row.student_unread),
       messages,
@@ -193,6 +194,13 @@ export async function markConversationSeen(conversationId: string, role: DemoRol
 
 export async function setResolved(conversationId: string): Promise<void> {
   const { error } = await requireSupabase().from('conversations').update({ resolved: true }).eq('id', conversationId)
+  failIfError(error)
+}
+
+export async function loopInTeachingAssistant(conversationId: string): Promise<void> {
+  const { error } = await requireSupabase().rpc('loop_in_teaching_assistant', {
+    p_conversation_id: conversationId,
+  })
   failIfError(error)
 }
 

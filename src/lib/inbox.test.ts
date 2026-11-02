@@ -79,6 +79,17 @@ describe('local inbox data', () => {
     expect(initialConversations.every((conversation) => conversation.messages.every((message) => message.course === conversation.course))).toBe(true)
   })
 
+  it('shows only course conversations explicitly looped in to the assigned TA', () => {
+    const assignedGroup = initialDemoCourseGroups[0]
+    const notLoopedIn = { ...initialConversations[0], taLoopedIn: false, courseGroupId: assignedGroup.id }
+    const loopedIn = { ...initialConversations[0], id: 'research-looped', taLoopedIn: true, courseGroupId: assignedGroup.id }
+    const otherConversation = { ...notLoopedIn, id: 'research-other' }
+
+    expect(conversationsForRole([notLoopedIn], 'Teaching Assistant', [assignedGroup], assignedGroup.taId)).toEqual([])
+    expect(conversationsForRole([loopedIn, otherConversation], 'Teaching Assistant', [assignedGroup], assignedGroup.taId))
+      .toEqual([loopedIn])
+  })
+
   it('updates only the selected instructor availability', () => {
     const conversations = [...initialConversations, { ...initialConversations[0], id: 'research-copy' }]
     const updated = setInstructorAvailability(conversations, 'Dr. Lina Kask', 'Away')
@@ -247,6 +258,7 @@ describe('local inbox data', () => {
     ]
     const group = createDemoCourseGroup([], profiles, 'Mobile Application Development', 'p5', ['p1', 'p4'], 'p3')!
     const threads = createCourseGroupConversations([group], profiles, initialConversations)
+    const loopedThreads = threads.map((thread, index) => index === 0 ? { ...thread, taLoopedIn: true } : thread)
 
     expect(threads).toHaveLength(2)
     expect(threads.every((thread) => thread.messages.length === 0)).toBe(true)
@@ -255,11 +267,13 @@ describe('local inbox data', () => {
     expect(conversationsForRole(threads, 'Student', [group], 'p6')).toHaveLength(0)
     expect(conversationsForRole(threads, 'Instructor', [group], 'p5')).toHaveLength(2)
     expect(conversationsForRole(threads, 'Instructor', [group], 'p2')).toHaveLength(0)
-    expect(conversationsForRole(threads, 'Teaching Assistant', [group], 'p3')).toHaveLength(2)
-    expect(conversationsForRole(threads, 'Teaching Assistant', [group], 'p7')).toHaveLength(0)
+    expect(conversationsForRole(threads, 'Teaching Assistant', [group], 'p3')).toHaveLength(0)
+    expect(conversationsForRole(loopedThreads, 'Teaching Assistant', [group], 'p3')).toEqual([loopedThreads[0]])
+    expect(conversationsForRole(loopedThreads, 'Teaching Assistant', [group], 'p7')).toHaveLength(0)
     expect(canReplyToConversation(threads[0], 'Instructor', [group], 'p5')).toBe(true)
     expect(canReplyToConversation(threads[0], 'Instructor', [group], 'p2')).toBe(false)
-    expect(canReplyToConversation(threads[0], 'Teaching Assistant', [group], 'p3')).toBe(true)
+    expect(canReplyToConversation(threads[0], 'Teaching Assistant', [group], 'p3')).toBe(false)
+    expect(canReplyToConversation(loopedThreads[0], 'Teaching Assistant', [group], 'p3')).toBe(true)
     expect(canReplyToConversation(threads[0], 'Teaching Assistant', [group], 'p7')).toBe(false)
     expect(demoProfileIdForRole('Instructor', profiles, [group])).toBe('p5')
     expect(demoProfileIdForRole('Teaching Assistant', profiles, [group])).toBe('p3')

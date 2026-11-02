@@ -6,6 +6,7 @@ import {
   createAccount as createPersistedAccount,
   createCourse as createPersistedCourse,
   currentSession,
+  loopInTeachingAssistant as loopPersistedTeachingAssistant,
   deleteAccount as deletePersistedAccount,
   loadWorkspace,
   markConversationSeen as markPersistedConversationSeen,
@@ -131,6 +132,11 @@ export default function App() {
   const roleConversations = conversationsForRole(conversations, role, courseGroups, demoProfileId)
   const visibleConversations = filterConversations(roleConversations, filter, query, searchField)
   const activeProfile = profiles.find((profile) => profile.id === demoProfileId && profile.role === role)
+  const activeCourseGroup = active ? courseGroups.find((group) =>
+    active.courseGroupId
+      ? group.id === active.courseGroupId
+      : group.name === active.course && group.instructorId === activeProfile?.id,
+  ) : undefined
   const instructorAvailability: InstructorAvailability = conversations.find(
     (conversation) => conversation.instructor === activeProfile?.name,
   )?.availability ?? 'Available'
@@ -333,6 +339,25 @@ export default function App() {
       ),
     )
     setFilter('Resolved')
+  }
+
+  async function loopInTa() {
+    if (!active || active.resolved || role !== 'Instructor' || !activeCourseGroup?.taId || active.taLoopedIn) return
+    if (supabaseConfigured) {
+      setBusy(true)
+      try {
+        await loopPersistedTeachingAssistant(active.id)
+        await refreshBackendWorkspace()
+      } catch (error) {
+        setBackendError(error instanceof Error ? error.message : String(error))
+      } finally {
+        setBusy(false)
+      }
+      return
+    }
+    setConversations((current) => current.map((conversation) =>
+      conversation.id === active.id ? { ...conversation, taLoopedIn: true } : conversation,
+    ))
   }
 
   async function markUrgent() {
@@ -638,8 +663,13 @@ export default function App() {
                 )}
               </div>
               <div className="thread-actions">
+                {role === 'Instructor' && !active.resolved && activeCourseGroup?.taId && (
+                  active.taLoopedIn
+                    ? <span className="ta-included">{t('taIncluded')}</span>
+                    : <button className="resolve-button" disabled={busy} onClick={() => void loopInTa()}>{t('loopInTa')}</button>
+                )}
                 {role === 'Instructor' && !active.resolved
-                  ? <button className="resolve-button" onClick={markResolved}>{t('markResolved')}</button>
+                  ? <button className="resolve-button" disabled={busy} onClick={markResolved}>{t('markResolved')}</button>
                   : active.resolved ? <span className="resolved-label">{t('resolvedConversation')}</span> : null}
               </div>
               {!active.resolved && (role === 'Student' || canReplyToConversation(active, role, courseGroups, demoProfileId)) && (

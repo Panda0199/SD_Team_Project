@@ -396,6 +396,9 @@ test('admin-only demo controls create fictional profiles and assigned course gro
   await page.getByRole('button', { name: 'Send reply' }).click()
   await expect(instructorThread.getByText('Start with the project template.')).toBeVisible()
 
+  await page.getByRole('button', { name: 'Loop in TA' }).click()
+  await expect(page.getByText('TA included')).toBeVisible()
+
   await page.getByRole('button', { name: 'Teaching Assistant', exact: true }).click()
   const taCard = page.getByRole('button', { name: /Mobile Application Development/ })
     .filter({ hasText: 'Start with the project template.' })

@@ -51,6 +51,8 @@ const words = {
   urgencyBadge: ['Urgent', 'Kiireloomuline'],
   flagUrgent: ['Flag as urgent', 'Märgi kiireloomuliseks'],
   markResolved: ['Mark as resolved', 'Märgi lahendatuks'],
+  loopInTa: ['Loop in TA', 'Kaasa õppeassistent'],
+  taIncluded: ['TA included', 'Õppeassistent kaasatud'],
   resolvedConversation: ['Resolved conversation', 'Lahendatud vestlus'],
   sent: ['Sent', 'Saadetud'],
   seen: ['Seen', 'Nähtud'],
