@@ -80,6 +80,9 @@ export function mapDatabaseWorkspace(
       id: String(row.id),
       author: authorId === userId ? 'You' : author?.name ?? 'Quickly user',
       body: String(row.body),
+      ...(typeof row.assignment_tag === 'string' && row.assignment_tag
+        ? { assignmentTag: row.assignment_tag }
+        : {}),
       direction,
       time: dateLabel(row.created_at),
       status: row.status as MessageStatus,
@@ -157,12 +160,19 @@ export async function currentSession(): Promise<Session | null> {
   return data.session
 }
 
-export async function sendMessage(conversationId: string, body: string, authorId: string, role: DemoRole): Promise<void> {
+export async function sendMessage(
+  conversationId: string,
+  body: string,
+  authorId: string,
+  role: DemoRole,
+  assignmentTag?: string,
+): Promise<void> {
   const { error } = await requireSupabase().from('messages').insert({
     conversation_id: conversationId,
     author_id: authorId,
     body,
     status: role === 'Student' ? 'Sent' : 'Replied',
+    assignment_tag: assignmentTag?.trim() || null,
   })
   failIfError(error)
 }

@@ -11,16 +11,27 @@ test('student opens a course conversation and sends a tagged question', async ({
   await expect(page.getByRole('heading', { name: 'Dr. Lina Kask' })).toBeVisible()
 
   await page.getByLabel('Ask a question about Research Methods').fill('When should we begin the survey?')
+  await page.getByLabel('Assignment tag (optional)').fill('Assignment 2')
   await page.getByRole('button', { name: 'Send question' }).click()
 
   const sentMessage = page.getByRole('region', { name: 'Research Methods conversation' })
     .locator('article')
     .filter({ hasText: 'When should we begin the survey?' })
   await expect(sentMessage).toBeVisible()
+  await expect(sentMessage.getByText('Assignment: Assignment 2')).toBeVisible()
   await expect(sentMessage.getByText('Sent', { exact: true })).toBeVisible()
+  await expect(page.getByLabel('Assignment tag (optional)')).toHaveValue('')
   await expect(page.getByRole('status').getByText('Waiting for reply')).toBeVisible()
   await expect(page.getByText('Demo status only · no server request is processing.')).toBeVisible()
   await expect(page.getByText('Tagged to Research Methods')).toBeVisible()
+
+  await page.getByRole('button', { name: 'Instructor', exact: true }).click()
+  await page.getByRole('button', { name: /Research Methods/ }).click()
+  await expect(page.getByRole('region', { name: 'Research Methods conversation' }).getByText('Assignment: Assignment 2')).toBeVisible()
+
+  await page.getByRole('button', { name: 'Teaching Assistant', exact: true }).click()
+  await page.getByRole('button', { name: /Research Methods/ }).click()
+  await expect(page.getByRole('region', { name: 'Research Methods conversation' }).getByText('Assignment: Assignment 2')).toBeVisible()
 })
 
 test('student can see Sent, Seen, and Replied conversation states', async ({ page }) => {

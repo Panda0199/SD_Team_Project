@@ -61,6 +61,7 @@ export default function App() {
   const [language, setLanguage] = useState<Language>('EN')
   const [activeId, setActiveId] = useState<string | null>(null)
   const [draft, setDraft] = useState('')
+  const [assignmentTag, setAssignmentTag] = useState('')
   const [demoSummaries, setDemoSummaries] = useState<Record<string, string>>({})
   const [demoExplanations, setDemoExplanations] = useState<Record<string, string>>({})
   const [showVoiceDemo, setShowVoiceDemo] = useState(false)
@@ -199,6 +200,7 @@ export default function App() {
     setSearchField(nextField)
     setActiveId(null)
     setDraft('')
+    setAssignmentTag('')
   }
 
   function messageAuthor(direction: Message['direction'], instructor: string, author: string) {
@@ -212,12 +214,14 @@ export default function App() {
     setDemoProfileId(demoProfileIdForRole(nextRole, profiles, courseGroups) ?? '')
     setActiveId(null)
     setDraft('')
+    setAssignmentTag('')
   }
 
   function selectDemoProfile(profileId: string) {
     setDemoProfileId(profileId)
     setActiveId(null)
     setDraft('')
+    setAssignmentTag('')
   }
 
   async function toggleInstructorAvailability() {
@@ -243,6 +247,7 @@ export default function App() {
   function openConversation(conversation: Conversation) {
     setActiveId(conversation.id)
     setDraft('')
+    setAssignmentTag('')
     setShowVoiceDemo(false)
     setConversations((current) =>
       current.map((item) =>
@@ -277,8 +282,9 @@ export default function App() {
       if (!authUserId) return
       setBusy(true)
       try {
-        await sendPersistedMessage(active.id, draft.trim(), authUserId, role)
+        await sendPersistedMessage(active.id, draft.trim(), authUserId, role, role === 'Student' ? assignmentTag : undefined)
         setDraft('')
+        setAssignmentTag('')
         await refreshBackendWorkspace()
       } catch (error) {
         setBackendError(error instanceof Error ? error.message : String(error))
@@ -288,7 +294,7 @@ export default function App() {
       return
     }
     const message = role === 'Student'
-      ? createStudentMessage(`${Date.now()}`, active.course, draft.trim(), activeProfile?.name)
+      ? createStudentMessage(`${Date.now()}`, active.course, draft.trim(), activeProfile?.name, assignmentTag)
       : createReplyMessage(`${Date.now()}`, active.course, draft.trim(), role, active.instructor, activeProfile?.name)
     setConversations((current) =>
       current.map((conversation) =>
@@ -298,6 +304,7 @@ export default function App() {
       ),
     )
     setDraft('')
+    setAssignmentTag('')
   }
 
   async function markResolved() {
@@ -348,6 +355,7 @@ export default function App() {
     setFilter(nextFilter)
     setActiveId(null)
     setDraft('')
+    setAssignmentTag('')
   }
 
   if (supabaseConfigured && (authLoading || !authUserId || !activeProfile)) {
@@ -565,6 +573,7 @@ export default function App() {
                     <article className={`message ${message.direction} ${isOutgoing(message.direction) ? 'outgoing' : ''}`}>
                       <span className="message-author">{messageAuthor(message.direction, active.instructor, message.author)}</span>
                       <p>{message.body}</p>
+                      {message.assignmentTag && <small className="assignment-tag">{t('assignmentTagDisplay')} {message.assignmentTag}</small>}
                       <div className="message-meta">
                         <time>{message.time}</time>
                         {message.status && <span className={`status status-${message.status.toLowerCase()}`}>{statusLabel(message.status)}</span>}
@@ -640,6 +649,18 @@ export default function App() {
                     placeholder={role === 'Student' ? t('questionPlaceholder') : t('replyPlaceholder')}
                     rows={2}
                   />
+                  {role === 'Student' && (
+                    <label className="assignment-tag-field" htmlFor="assignment-tag">
+                      {t('assignmentTagOptional')}
+                      <input
+                        id="assignment-tag"
+                        type="text"
+                        value={assignmentTag}
+                        onChange={(event) => setAssignmentTag(event.target.value)}
+                        placeholder={t('assignmentTagPlaceholder')}
+                      />
+                    </label>
+                  )}
                   <div className="composer-footer">
                     <span>{role === 'Student' ? `${t('taggedTo')} ${active.course}` : `${t('replyingIn')} ${active.course}`}</span>
                     <button type="submit" disabled={!draft.trim() || busy}>
