@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import AdminWorkspace from './AdminWorkspace'
 import { label, type Language, type LabelKey } from './lib/labels'
 import { toSignInEmail } from './lib/signIn'
@@ -68,6 +68,7 @@ export default function App() {
   const [filter, setFilter] = useState<ConversationFilter>('Active')
   const [query, setQuery] = useState('')
   const [searchField, setSearchField] = useState<ConversationSearchField>('all')
+  const messageListRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
     if (supabaseConfigured) return
     setConversations((current) => {
@@ -123,6 +124,10 @@ export default function App() {
     }
   }, [authUserId])
   const active = conversations.find((conversation) => conversation.id === activeId)
+  useEffect(() => {
+    const messageList = messageListRef.current
+    if (messageList) messageList.scrollTop = messageList.scrollHeight
+  }, [active?.id, active?.messages.length])
   const roleConversations = conversationsForRole(conversations, role, courseGroups, demoProfileId)
   const visibleConversations = filterConversations(roleConversations, filter, query, searchField)
   const activeProfile = profiles.find((profile) => profile.id === demoProfileId && profile.role === role)
@@ -556,7 +561,7 @@ export default function App() {
                 )}
                 {active.resolved && <p className="resolved-note">{t('resolvedNote')}</p>}
               </div>
-              <div className="message-list" aria-live="polite">
+              <div className="message-list" aria-live="polite" ref={messageListRef}>
                 <p className="thread-date">
                   {role === 'Student' ? t('yourConversation') : `${t('conversationWith')} ${active.studentName ?? DEMO_STUDENT_NAME}`} · {active.course}
                 </p>
