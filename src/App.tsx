@@ -398,19 +398,37 @@ export default function App() {
           </div>
         </header>
         <main className="auth-panel">
-          {authLoading
-            ? <p role="status">{t('signingIn')}</p>
-            : authUserId
-              ? <><h1>{t('profileMissing')}</h1><button className="admin-primary" onClick={() => void signOut()}>{t('signOut')}</button></>
-              : <form className="auth-form" onSubmit={signIn}>
-                <p className="eyebrow">QUICKLY</p>
-                <h1>{t('signIn')}</h1>
-                <p>{t('authRequired')}</p>
-                <label>{t('universityIdOrEmail')}<input type="text" autoComplete="username" required value={email} onChange={(event) => setEmail(event.target.value)} /></label>
-                <label>{t('password')}<input type="password" autoComplete="current-password" required value={password} onChange={(event) => setPassword(event.target.value)} /></label>
-                {backendError && <p className="auth-error" role="alert">{backendError}</p>}
-                <button className="admin-primary" type="submit" disabled={busy}>{busy ? t('signingIn') : t('signInButton')}</button>
-              </form>}
+          <div className="auth-layout">
+            <section className="auth-hero">
+              <span className="auth-hero-mark" aria-hidden="true">Q</span>
+              <p className="auth-tagline">{t('signInTagline')}</p>
+              <ul className="auth-benefits">
+                <li>{t('signInBenefitRead')}</li>
+                <li>{t('signInBenefitSearch')}</li>
+                <li>{t('signInBenefitLanguages')}</li>
+              </ul>
+              <div className="auth-qr-tile">
+                <img src="/quickly-qr.svg" width="132" height="132" alt="QR code that opens Quickly" />
+                <p>{t('signInQrCaption')}</p>
+              </div>
+            </section>
+            <div className="auth-card">
+              <p className="auth-mobile-tagline">{t('signInTagline')}</p>
+              {authLoading
+                ? <p role="status">{t('signingIn')}</p>
+                : authUserId
+                  ? <><h1>{t('profileMissing')}</h1><button className="admin-primary" onClick={() => void signOut()}>{t('signOut')}</button></>
+                  : <form className="auth-form" onSubmit={signIn}>
+                    <p className="eyebrow">QUICKLY</p>
+                    <h1>{t('signIn')}</h1>
+                    <p>{t('authRequired')}</p>
+                    <label>{t('universityIdOrEmail')}<span className="auth-input-wrap"><input type="text" autoComplete="username" required value={email} onChange={(event) => setEmail(event.target.value)} /></span></label>
+                    <label>{t('password')}<span className="auth-input-wrap"><input type="password" autoComplete="current-password" required value={password} onChange={(event) => setPassword(event.target.value)} /></span></label>
+                    {backendError && <p className="auth-error" role="alert">{backendError}</p>}
+                    <button className="admin-primary" type="submit" disabled={busy}>{busy ? t('signingIn') : t('signInButton')}</button>
+                  </form>}
+            </div>
+          </div>
         </main>
       </div>
     )
