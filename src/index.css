@@ -216,3 +216,85 @@ body{background:linear-gradient(120deg,#eef0ff,#f3e8ff,#e0f2fe,#eef0ff);backgrou
 @media(prefers-reduced-motion:reduce){
   .message,.message::before{animation:none}
 }
+@media(max-width:720px){
+  :root{--header-h:56px}
+  html,body,#root,.app-shell{width:100%;height:100%;min-height:0;overflow:hidden}
+  .topbar{height:56px;min-height:56px;padding:0 8px;gap:5px;display:flex;flex-wrap:nowrap;overflow:hidden}
+  .brand{flex:none;gap:5px;font-size:14px;letter-spacing:-.2px}
+  .brand-mark{width:28px;height:28px;border-radius:9px;font-size:16px}
+  .demo-label,.demo-role-label{display:none}
+  .demo-role-control{flex:1;min-width:0;margin-left:auto;display:flex;justify-items:initial}
+  .demo-role-buttons{flex:1;min-width:0;justify-content:center;gap:1px;padding:2px;border-radius:8px}
+  .demo-role-buttons button{flex:1;min-width:0;padding:5px 2px;font-size:8px;line-height:1;white-space:nowrap}
+  .language-control{flex:none;gap:1px;padding:2px;border-radius:7px}
+  .language-control button{padding:5px 4px;font-size:9px;line-height:1}
+  .sign-out-button{flex:none;padding:6px 7px;font-size:9px;white-space:nowrap}
+  .workspace,.conversation-open.workspace{position:relative;display:block;width:100%;height:calc(100dvh - var(--header-h));min-height:0;margin:0;border-radius:0;overflow:hidden}
+  .inbox-panel,.thread-panel{position:absolute;inset:0;width:100%;height:100%;min-height:0;overflow:hidden}
+  .inbox-panel{display:flex;flex-flow:row wrap;align-content:stretch;gap:5px 6px;padding:8px 10px max(5px,env(safe-area-inset-bottom));border:0}
+  .panel-heading{order:0;flex:1 0 100%;padding:0 2px}
+  .panel-heading h1{font-size:20px}
+  .panel-intro{display:none}
+  .availability-toggle{order:1;flex:1 0 100%;margin:0;padding:4px 8px;font-size:10px}
+  .demo-account-label{order:2;flex:1 0 100%;margin:0 2px -5px;font-size:9px}
+  .demo-account-select{order:3;flex:1 0 100%;width:100%;min-height:30px;margin:0;padding:4px 8px;font-size:11px}
+  .role-scope-note{order:4;flex:1 0 100%;margin:0;padding:5px 8px;font-size:9px;line-height:1.35}
+  .search-label[for="conversation-search"],.search-label[for="conversation-search-field"]{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  .search-input{order:5;flex:1 0 100%;width:100%;min-width:0;height:34px;margin:0;padding:6px 10px;border-radius:11px;font-size:12px}
+  .search-field-select{order:6;flex:1 1 90px;width:auto;min-width:0;height:32px;min-height:32px;margin:0;padding:4px 7px;border-radius:9px;font-size:10px}
+  .filter-tabs{order:7;display:flex;flex:1 1 132px;min-width:0;gap:2px;margin:0;padding:2px;border-radius:9px}
+  .filter-tab{flex:1;min-width:0;padding:5px 4px;font-size:10px}
+  .conversation-list{order:8;display:grid;flex:1 1 100%;width:100%;min-height:0;overflow-y:auto;align-content:start;gap:5px;padding:2px 0;overscroll-behavior:contain}
+  .conversation-card{min-height:68px;gap:10px;padding:9px 8px 9px 6px;border-radius:12px}
+  .conversation-card.selected{border-left-color:var(--primary)}
+  .course-icon{width:44px;height:44px}
+  .card-copy{grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto;align-content:center;column-gap:6px;row-gap:2px}
+  .card-topline{display:contents}
+  .card-topline strong{grid-column:1;grid-row:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+  .card-topline time{grid-column:2;grid-row:1;align-self:start;font-size:9px;white-space:nowrap}
+  .instructor-name{display:none}
+  .preview{grid-column:1;grid-row:2;min-width:0;font-size:10px}
+  .card-badges{grid-column:2;grid-row:2;justify-self:end;margin:0}
+  .status{font-size:9px;padding:2px 6px}
+  .privacy-note{order:9;flex:1 0 100%;margin:0;padding:2px 4px 0;text-align:center;font-size:9px}
+  .thread-panel{display:none;flex-direction:column;transform:translateX(10px);opacity:0}
+  .conversation-open .inbox-panel{display:none}
+  .conversation-open .thread-panel{display:flex;animation:mobile-screen-enter 180ms ease both}
+  .workspace:not(.conversation-open) .inbox-panel{animation:mobile-screen-enter 180ms ease both}
+  .thread-heading{position:sticky;top:0;z-index:2;display:grid;grid-template-columns:32px minmax(0,1fr);grid-template-areas:"back name" "back availability" "away away";align-items:center;column-gap:9px;row-gap:0;flex:none;min-height:52px;padding:5px 10px;background:rgba(255,255,255,.97);backdrop-filter:blur(10px)}
+  .thread-heading .back-button{grid-area:back;justify-self:start;margin:0;padding:6px;font-size:18px}
+  .thread-heading .back-button span{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  .thread-heading .course-pill,.thread-heading>p:not(.away-note):not(.resolved-note){display:none}
+  .thread-heading h2{grid-area:name;display:flex;align-items:center;gap:8px;min-width:0;margin:0;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .thread-heading h2::before{content:"";flex:none;width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-2))}
+  .thread-heading .availability-row{grid-area:availability;margin:0;font-size:10px;line-height:1.15}
+  .thread-heading .availability-dot{width:7px;height:7px}
+  .thread-heading .away-note,.thread-heading .resolved-note{grid-area:away;margin:3px 0 0;padding:4px 8px;border-radius:7px;font-size:10px;line-height:1.25}
+  .thread-heading .resolved-note{color:var(--muted);background:var(--tint)}
+  .message-list{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:12px 10px;gap:10px}
+  .message{max-width:85%;padding:10px 12px}
+  .message p{font-size:12px}
+  .thread-date{font-size:10px}
+  .thread-actions{flex:none;padding:0 10px 3px}
+  .composer{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"label label" "input send" "extra voice";align-items:center;gap:4px 6px;flex:none;max-height:120px;margin:0 8px max(5px,env(safe-area-inset-bottom));padding:6px 8px;border-radius:19px}
+  .composer>label:not(.assignment-tag-field){grid-area:label;margin:0;font-size:9px;line-height:1.1}
+  .composer textarea{grid-area:input;width:100%;height:34px;min-height:34px;max-height:34px;resize:none;padding:6px 9px;border:1px solid var(--line);border-radius:16px;background:#fff;font-size:12px;line-height:1.3}
+  .composer-footer{display:contents}
+  .composer-footer>span{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  .composer button[type="submit"]{grid-area:send;display:grid;place-items:center;width:34px;height:34px;padding:0;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-2));font-size:0}
+  .composer button[type="submit"] span{margin:0;font-size:16px}
+  .composer .assignment-tag-field{grid-area:extra;display:grid;grid-template-columns:auto minmax(56px,1fr);align-items:center;gap:4px;min-width:0;margin:0;font-size:9px}
+  .composer .assignment-tag-field input{min-width:0;min-height:26px;height:26px;padding:3px 7px;border-radius:12px;font-size:10px}
+  .composer .voice-demo-toggle{grid-area:voice;justify-self:end;min-height:26px;margin:0;padding:4px 7px;font-size:9px;white-space:nowrap}
+  .thread-empty-copy{margin:auto 0}
+  .conversation-list:has(.no-results){display:flex;flex-direction:column}
+  .no-results{flex:1;margin:0}
+}
+@keyframes mobile-screen-enter{
+  from{opacity:0;transform:translateX(10px)}
+  to{opacity:1;transform:translateX(0)}
+}
+@media(prefers-reduced-motion:reduce){
+  .conversation-open .inbox-panel,.conversation-open .thread-panel{animation:none}
+  .workspace:not(.conversation-open) .inbox-panel{animation:none}
+}
