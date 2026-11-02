@@ -82,6 +82,26 @@ describe('Supabase account creation', () => {
     })
   })
 
+  it('passes Admin as an account role to the Edge Function', async () => {
+    invoke.mockResolvedValue({ data: { id: 'auth-admin-2' }, error: null })
+
+    await createAccount({
+      universityId: ' S1002 ',
+      name: 'Second Admin',
+      password: 'secret1',
+      role: 'Admin',
+    })
+
+    expect(invoke).toHaveBeenCalledWith('admin-create-user', {
+      body: {
+        universityId: ' S1002 ',
+        displayName: 'Second Admin',
+        password: 'secret1',
+        role: 'Admin',
+      },
+    })
+  })
+
   describe('Supabase account deletion', () => {
     it('invokes the admin Edge Function with the target user ID', async () => {
       invoke.mockResolvedValue({ data: { success: true }, error: null })
