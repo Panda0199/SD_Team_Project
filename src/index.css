@@ -163,3 +163,56 @@ body{background:linear-gradient(120deg,#eef0ff,#f3e8ff,#e0f2fe,#eef0ff);backgrou
 }
 @media(max-width:700px){:root{--header-h:108px}}
 @media(prefers-reduced-motion:reduce){body{animation:none}}
+.conversation-list{background:linear-gradient(180deg,var(--tint),var(--surface) 260px)}
+.conversation-card{position:relative;border-left:3px solid transparent;padding:12px 10px 12px 7px;transition:background-color 150ms ease,border-color 150ms ease,box-shadow 150ms ease}
+.conversation-card:hover{background:#f8f6ff}
+.conversation-card.selected{border-left-color:var(--primary);background:var(--tint)}
+.conversation-card:has(.status-new) .card-topline strong{font-weight:800}
+.course-icon{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-2));color:#fff}
+.status-new::before{content:"";width:6px;height:6px;margin-right:5px;border-radius:50%;background:var(--primary)}
+.thread-panel{background:linear-gradient(180deg,var(--tint),var(--surface) 260px)}
+.thread-heading{padding:12px 24px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.thread-heading .back-button{flex:none;margin:0}
+.thread-heading .course-pill{flex:none}
+.thread-heading h2{flex:none;font-size:16px;margin:0}
+.thread-heading>p:not(.away-note):not(.resolved-note){font-size:11px;margin:0}
+.thread-heading .availability-row{flex:none;margin:0}
+.thread-heading .away-note,.thread-heading .resolved-note{flex:1 0 100%;margin:0;padding:6px 10px;border-radius:8px;background:var(--tint);color:var(--text);font-size:11px}
+.message-list{background:linear-gradient(180deg,var(--tint),var(--surface) 240px)}
+.message{position:relative;isolation:isolate;border-radius:18px 18px 18px 5px;background:var(--tint);color:var(--text);animation:message-rise 180ms ease both}
+.message::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;background:rgba(27,23,64,.1);animation:message-surface-fade 180ms ease both;pointer-events:none}
+.message.outgoing,.message.student{border-radius:18px 18px 5px 18px;background:linear-gradient(135deg,var(--primary),var(--primary-2));color:#fff}
+.message-author{color:var(--muted);font-weight:700}
+.message.outgoing .message-author,.message.student .message-author{color:#fff}
+.message p,.message.outgoing p,.message.student p{color:inherit}
+.message-meta,.message-meta time{color:var(--muted)}
+.message.outgoing .message-meta,.message.outgoing .message-meta time,.message.student .message-meta,.message.student .message-meta time{color:rgba(255,255,255,.92)}
+.message .status{background:#fff;color:var(--text)}
+.message .status-seen{background:#fff3db;color:#704600}
+.message .status-replied,.message .status-resolved{background:#e5f6ee;color:#126346}
+.message .status-new{background:var(--tint);color:var(--primary)}
+.message .assignment-tag{background:#fff;color:var(--text)}
+.composer{border-radius:24px;padding:12px 16px}
+.composer label{font-size:11px;margin-bottom:4px}
+.composer textarea{min-height:42px;max-height:90px;resize:vertical}
+.composer .assignment-tag-field{gap:3px;margin-top:5px}
+.composer .assignment-tag-field input{min-height:32px;border-radius:12px}
+.composer-footer{padding-top:8px;margin-top:6px}
+.composer button{border-radius:999px;background:linear-gradient(135deg,var(--primary),var(--primary-2))}
+.composer button:disabled{background:var(--primary);opacity:.72}
+.composer button:not(:disabled):hover{background:linear-gradient(135deg,var(--primary-2),var(--primary));box-shadow:0 4px 12px rgba(91,75,219,.22);transform:translateY(-1px)}
+.composer .voice-demo-toggle{width:max-content;margin-top:6px;border-radius:999px}
+.thread-empty-copy,.no-results{color:var(--muted);text-align:center}
+.thread-empty-copy{display:grid;justify-items:center;gap:10px}
+.thread-empty-copy::before,.no-results::before{content:"";display:block;width:52px;height:52px;margin:0 auto 2px;border-radius:50%;background:linear-gradient(135deg,var(--tint),#fff 75%,var(--primary-2));box-shadow:0 5px 18px rgba(91,75,219,.12)}
+.conversation-list:has(.no-results){display:flex;flex-direction:column}
+.no-results{display:grid;justify-items:center;align-content:center;gap:10px;flex:1;margin:0;padding:20px}
+@keyframes message-rise{from{transform:translateY(8px)}to{transform:translateY(0)}}
+@keyframes message-surface-fade{from{opacity:1}to{opacity:0}}
+@media(min-width:721px){
+  .thread-heading{min-height:68px}
+  .thread-heading .back-button{padding-right:10px}
+}
+@media(prefers-reduced-motion:reduce){
+  .message,.message::before{animation:none}
+}
