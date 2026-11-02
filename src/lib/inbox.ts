@@ -179,6 +179,7 @@ export interface Conversation {
   waitingHours: number
   urgent: boolean
   resolved: boolean
+  taLoopedIn: boolean
   unreadForInstructor: boolean
   unreadForStudent: boolean
   messages: Message[]
@@ -240,6 +241,7 @@ export function createCourseGroupConversations(
         waitingHours: 0,
         urgent: false,
         resolved: false,
+        taLoopedIn: false,
         unreadForInstructor: false,
         unreadForStudent: false,
         messages: [],
@@ -309,13 +311,13 @@ export function conversationsForRole(
   return conversations.filter((conversation) => {
     if (!conversation.courseGroupId) {
       return role !== 'Teaching Assistant'
-        || groups.some((group) => group.taId === profileId && group.name === conversation.course)
+        || (conversation.taLoopedIn && groups.some((group) => group.taId === profileId && group.name === conversation.course))
     }
     const group = groups.find((item) => item.id === conversation.courseGroupId)
     if (!group) return false
     if (role === 'Student') return conversation.studentId === profileId && group.studentIds.includes(profileId)
     if (role === 'Instructor') return group.instructorId === profileId
-    return group.taId === profileId
+    return conversation.taLoopedIn && group.taId === profileId
   })
 }
 
@@ -388,6 +390,7 @@ export const initialConversations: Conversation[] = [
     waitingHours: 0,
     urgent: false,
     resolved: false,
+    taLoopedIn: true,
     unreadForInstructor: false,
     unreadForStudent: false,
     messages: [
@@ -407,6 +410,7 @@ export const initialConversations: Conversation[] = [
     waitingHours: 5,
     urgent: false,
     resolved: false,
+    taLoopedIn: false,
     unreadForInstructor: false,
     unreadForStudent: false,
     messages: [
@@ -424,6 +428,7 @@ export const initialConversations: Conversation[] = [
     waitingHours: 3,
     urgent: false,
     resolved: false,
+    taLoopedIn: false,
     unreadForInstructor: false,
     unreadForStudent: false,
     messages: [
@@ -441,6 +446,7 @@ export const initialConversations: Conversation[] = [
     waitingHours: 0,
     urgent: false,
     resolved: true,
+    taLoopedIn: false,
     unreadForInstructor: false,
     unreadForStudent: false,
     messages: [

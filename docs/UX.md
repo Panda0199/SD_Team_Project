@@ -33,7 +33,7 @@
 
 - The inbox lists assigned student conversations with the student, course, latest message preview, and conversation status. New student questions appear as unread/new conversation notifications in the demo.
 - Opening a thread marks the student message as seen in the shared demo state.
-- The conversation shows the student, course, and message history. The instructor can reply; the reply appears in the same thread and the student view shows the reply state.
+- The conversation shows the student, course, and message history. The instructor can reply; the reply appears in the same thread and the student view shows the reply state. An instructor can explicitly loop the course's assigned teaching assistant into an individual thread.
 - Long student messages may show a separate local “AI summary · Demo”; the full original message remains available. AI does not compose or send replies.
 - The instructor can mark an active conversation as resolved. Its history remains readable under the Resolved filter.
 - Instructor availability is shown to students in the conversation header as Available or Away. Away indicates that replies may be delayed.
@@ -41,7 +41,7 @@
 
 ### Teaching Assistant view
 
-- The TA inbox shows only course conversations assigned to that fictional TA. The interface explains that other course conversations are unavailable in this demo.
+- The TA inbox shows only individual conversations for which that TA is assigned to the course and has been explicitly looped in. Other conversations in the same course remain unavailable.
 - The TA can open an allowed conversation, read its history, and reply; the sender is identified in the thread.
 - This is a local demonstration of expected course scoping, not real authentication or security enforcement.
 

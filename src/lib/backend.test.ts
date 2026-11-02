@@ -2,14 +2,16 @@ import { describe, expect, it, vi } from 'vitest'
 
 const invoke = vi.hoisted(() => vi.fn())
 const insert = vi.hoisted(() => vi.fn())
+const rpc = vi.hoisted(() => vi.fn())
 vi.mock('./supabase', () => ({
   requireSupabase: () => ({
     functions: { invoke },
     from: () => ({ insert }),
+    rpc,
   }),
 }))
 
-import { createAccount, deleteAccount, mapDatabaseWorkspace, sendMessage } from './backend'
+import { createAccount, deleteAccount, loopInTeachingAssistant, mapDatabaseWorkspace, sendMessage } from './backend'
 
 describe('Supabase workspace mapping', () => {
   it('maps persisted course conversations and role/status fields to the existing UI model', () => {
@@ -22,7 +24,7 @@ describe('Supabase workspace mapping', () => {
       enrollments: [{ course_id: 'course-1', student_id: 'student-1' }],
       conversations: [{
         id: 'conversation-1', course_id: 'course-1', student_id: 'student-1',
-        resolved: false, urgent: true, staff_unread: false, student_unread: true,
+        resolved: false, urgent: true, ta_looped_in: true, staff_unread: false, student_unread: true,
         created_at: '2026-10-21T10:00:00.000Z', updated_at: '2026-10-21T10:05:00.000Z',
       }],
       messages: [{
@@ -37,6 +39,7 @@ describe('Supabase workspace mapping', () => {
     expect(result.conversations[0]).toMatchObject({
       course: 'Research Methods', instructor: 'Dr. Example', availability: 'Away',
       urgent: true, unreadForStudent: true, status: 'Replied',
+      taLoopedIn: true,
     })
 
     expect(result.conversations[0].messages[0]).toMatchObject({
@@ -80,6 +83,18 @@ describe('Supabase message assignment tags', () => {
       body: 'Question',
       status: 'Sent',
       assignment_tag: 'Assignment 2',
+    })
+  })
+})
+
+describe('Supabase teaching-assistant loop in', () => {
+  it('calls the loop-in RPC for the selected conversation', async () => {
+    rpc.mockResolvedValue({ error: null })
+
+    await loopInTeachingAssistant('conversation-1')
+
+    expect(rpc).toHaveBeenCalledWith('loop_in_teaching_assistant', {
+      p_conversation_id: 'conversation-1',
     })
   })
 })
