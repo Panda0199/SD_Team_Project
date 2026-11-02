@@ -1,5 +1,18 @@
 import { expect, test } from '@playwright/test'
 
+function contrastRatio(foreground: string, background: string) {
+  const luminance = (color: string) => {
+    const [red, green, blue] = color.match(/[\d.]+/g)!.slice(0, 3).map(Number).map((channel) => {
+      const normalized = channel / 255
+      return normalized <= 0.04045 ? normalized / 12.92 : ((normalized + 0.055) / 1.055) ** 2.4
+    })
+    return 0.2126 * red + 0.7152 * green + 0.0722 * blue
+  }
+  const light = Math.max(luminance(foreground), luminance(background))
+  const dark = Math.min(luminance(foreground), luminance(background))
+  return (light + 0.05) / (dark + 0.05)
+}
+
 test('student opens a course conversation and sends a tagged question', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
@@ -295,13 +308,34 @@ test('admin-only demo controls create fictional profiles and assigned course gro
   await page.getByRole('button', { name: 'Admin', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Profile and course management' })).toBeVisible()
   await expect(page.getByText('Demo simulation only; no real accounts or permissions are created.')).toBeVisible()
+  const adminCards = page.locator('.admin-card')
+  await expect(adminCards).toHaveCount(2)
+  await expect(adminCards.first()).toHaveCSS('border-radius', '18px')
+  await expect(adminCards.first()).toHaveCSS('background-color', 'rgb(255, 255, 255)')
+  expect(await adminCards.first().evaluate((element) => getComputedStyle(element, '::before').backgroundImage)).toContain('linear-gradient')
+  const adminLists = page.locator('.profile-list')
+  await expect(adminLists).toHaveCount(2)
+  for (const list of await adminLists.all()) {
+    await expect(list).toHaveCSS('max-height', '340px')
+    await expect(list).toHaveCSS('overflow-y', 'auto')
+    expect(await list.evaluate((element) => getComputedStyle(element).boxShadow)).toContain('inset')
+  }
+  await expect(page.getByLabel('Display name')).toHaveCSS('height', '44px')
+  await expect(page.getByRole('button', { name: 'Create', exact: true })).toHaveCSS('border-radius', '999px')
+  expect(await page.getByRole('button', { name: 'Create', exact: true }).evaluate((element) => getComputedStyle(element).backgroundImage)).toContain('linear-gradient')
+  expect(await page.locator('.admin-grid').evaluate((element) => getComputedStyle(element).gridTemplateColumns.split(' ').length)).toBe(1)
+  await page.setViewportSize({ width: 1024, height: 900 })
+  expect(await page.locator('.admin-grid').evaluate((element) => getComputedStyle(element).gridTemplateColumns.split(' ').length)).toBe(2)
+  await page.setViewportSize({ width: 390, height: 844 })
 
   await page.getByLabel('Display name').fill('Demo Student')
   await page.getByLabel('Fictional demo ID').fill('student-demo')
   await page.getByLabel('Profile type').selectOption('Student')
   await page.getByRole('button', { name: 'Create', exact: true }).click()
   await expect(page.getByText('Fictional profile created.')).toBeVisible()
-  await expect(page.locator('.profile-row').filter({ hasText: 'Demo Student' })).toBeVisible()
+  const demoStudentRow = page.locator('.profile-row').filter({ hasText: 'Demo Student' })
+  await expect(demoStudentRow).toBeVisible()
+  await expect(demoStudentRow.locator('.profile-avatar')).toHaveAttribute('data-initials', 'DS')
 
   for (const profile of [
     { name: 'Taylor Student', id: 'student-taylor', role: 'Student' },
@@ -312,7 +346,15 @@ test('admin-only demo controls create fictional profiles and assigned course gro
     await page.getByLabel('Fictional demo ID').fill(profile.id)
     await page.getByLabel('Profile type').selectOption(profile.role)
     await page.getByRole('button', { name: 'Create', exact: true }).click()
-    await expect(page.locator('.profile-row').filter({ hasText: profile.name })).toBeVisible()
+    const profileRow = page.locator('.profile-row').filter({ hasText: profile.name })
+    await expect(profileRow).toBeVisible()
+    const roleChip = profileRow.locator('.role-chip')
+    await expect(roleChip).toHaveClass(new RegExp(`role-chip-${profile.role.toLowerCase().replaceAll(' ', '-')}`))
+    const colors = await roleChip.evaluate((element) => {
+      const style = getComputedStyle(element)
+      return { foreground: style.color, background: style.backgroundColor }
+    })
+    expect(contrastRatio(colors.foreground, colors.background)).toBeGreaterThanOrEqual(4.5)
   }
 
   await page.getByLabel('Course name').fill('Mobile Application Development')

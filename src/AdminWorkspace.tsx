@@ -94,8 +94,11 @@ export default function AdminWorkspace({ language, profiles, setProfiles, groups
           <div className="profile-list">
             {profiles.map((profile) => (
               <div className="profile-row" key={profile.id}>
-                <span><strong>{profile.name}</strong><small>{profile.demoId}</small></span>
-                <span className="role-chip">{profile.role === 'Student' ? t('student') : profile.role === 'Instructor' ? t('instructor') : profile.role === 'Admin' ? t('admin') : t('assistant')}</span>
+                <div className="profile-identity">
+                  <span className="profile-avatar" data-initials={profile.name.trim().split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join('').toUpperCase()} />
+                  <span className="profile-copy"><strong>{profile.name}</strong><small>{profile.demoId}</small></span>
+                </div>
+                <span className={`role-chip role-chip-${profile.role.toLowerCase().replaceAll(' ', '-')}`}>{profile.role === 'Student' ? t('student') : profile.role === 'Instructor' ? t('instructor') : profile.role === 'Admin' ? t('admin') : t('assistant')}</span>
                 {backendMode && profile.role !== 'Admin' && <button type="button" onClick={() => void deleteProfile(profile)}>{t('delete')}</button>}
               </div>
             ))}
