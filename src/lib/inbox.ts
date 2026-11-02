@@ -161,6 +161,7 @@ export interface Message {
   id: string
   author: string
   body: string
+  assignmentTag?: string
   direction: 'student' | 'instructor' | 'ta'
   time: string
   status?: MessageStatus
@@ -251,8 +252,17 @@ export function createCourseGroupConversations(
   return newConversations
 }
 
-export function createStudentMessage(id: string, course: string, body: string, author = 'You'): Message {
-  return { id, author, body, direction: 'student', time: 'Just now', status: 'Sent', course }
+export function createStudentMessage(id: string, course: string, body: string, author = 'You', assignmentTag?: string): Message {
+  return {
+    id,
+    author,
+    body,
+    ...(assignmentTag?.trim() ? { assignmentTag: assignmentTag.trim() } : {}),
+    direction: 'student',
+    time: 'Just now',
+    status: 'Sent',
+    course,
+  }
 }
 
 export function createReplyMessage(

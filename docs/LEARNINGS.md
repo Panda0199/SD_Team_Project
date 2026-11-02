@@ -31,3 +31,8 @@ Append three lines at the end of every session. Never rewrite earlier entries.
 - What worked: creating Auth users and matching profiles in a server-side Edge Function keeps secret credentials out of the browser.
 - What did not: live account creation cannot be validated without deploying the Edge Function to the connected Supabase project.
 - What we change next: deploy the function and verify an admin-created university ID can sign in.
+
+## Session · 2 Nov 2026 · Optional assignment tags
+- What worked: an optional message field can persist and render assignment context without adding assignment-management data.
+- What did not: the live column requires migration 004 to be applied before deployments begin sending tags.
+- What we change next: apply migration 004, then verify assignment tags across student, instructor, and TA views.

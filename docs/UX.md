@@ -23,7 +23,7 @@
 
 - The header shows the course, instructor, instructor availability, and an Away notice when replies may be delayed.
 - The message history keeps student and instructor/TA messages visible with status information.
-- The composer is tagged to the selected course and sends the student's question to that course thread.
+- The composer is tagged to the selected course and sends the student's question to that course thread. Students may optionally add a text assignment tag; it is displayed with the message to all conversation participants.
 - For an unanswered conversation waiting over two hours, the student can flag it as urgent; an Urgent label indicates the follow-up.
 - A sufficiently long student message can have a separate deterministic local summary labeled “AI summary · Demo”; the original message remains visible.
 - “Explain simply” can show a separate local explanation labeled “AI explanation · Demo” for an instructor or TA reply.

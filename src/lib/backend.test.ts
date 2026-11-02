@@ -1,11 +1,15 @@
 import { describe, expect, it, vi } from 'vitest'
 
 const invoke = vi.hoisted(() => vi.fn())
+const insert = vi.hoisted(() => vi.fn())
 vi.mock('./supabase', () => ({
-  requireSupabase: () => ({ functions: { invoke } }),
+  requireSupabase: () => ({
+    functions: { invoke },
+    from: () => ({ insert }),
+  }),
 }))
 
-import { createAccount, deleteAccount, mapDatabaseWorkspace } from './backend'
+import { createAccount, deleteAccount, mapDatabaseWorkspace, sendMessage } from './backend'
 
 describe('Supabase workspace mapping', () => {
   it('maps persisted course conversations and role/status fields to the existing UI model', () => {
@@ -23,7 +27,8 @@ describe('Supabase workspace mapping', () => {
       }],
       messages: [{
         id: 'message-1', conversation_id: 'conversation-1', author_id: 'instructor-1',
-        body: 'Use the assigned reading.', status: 'Replied', created_at: '2026-10-21T10:05:00.000Z',
+        body: 'Use the assigned reading.', assignment_tag: 'Assignment 2',
+        status: 'Replied', created_at: '2026-10-21T10:05:00.000Z',
       }],
     }, 'student-1')
 
@@ -35,8 +40,10 @@ describe('Supabase workspace mapping', () => {
     })
 
     expect(result.conversations[0].messages[0]).toMatchObject({
-      author: 'Dr. Example', body: 'Use the assigned reading.', direction: 'instructor', status: 'Replied',
+      author: 'Dr. Example', body: 'Use the assigned reading.', assignmentTag: 'Assignment 2',
+      direction: 'instructor', status: 'Replied',
     })
+
   })
 
   it('fails clearly if a signed-in user has no Quickly profile', () => {
@@ -58,6 +65,22 @@ describe('Supabase workspace mapping', () => {
       messages: [],
     }, 'admin-1')
     expect(result.profile.role).toBe('Admin')
+  })
+})
+
+describe('Supabase message assignment tags', () => {
+  it('trims and inserts an optional assignment tag', async () => {
+    insert.mockResolvedValue({ error: null })
+
+    await sendMessage('conversation-1', 'Question', 'student-1', 'Student', ' Assignment 2 ')
+
+    expect(insert).toHaveBeenCalledWith({
+      conversation_id: 'conversation-1',
+      author_id: 'student-1',
+      body: 'Question',
+      status: 'Sent',
+      assignment_tag: 'Assignment 2',
+    })
   })
 })
 
