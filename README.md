@@ -9,6 +9,11 @@ When a university student is waiting on an instructor's answer to a course quest
 | Board | https://github.com/users/Panda0199/projects/2 |
 | Course | PR-520 Software Development Team Project, EEK, 2026/27 |
 
+## Demo day
+- [Demo slides (PowerPoint)](docs/demo-slides.pptx)
+- [Live app](https://quickly-mainor.netlify.app/)
+- [Test report](docs/TESTPLAN.md)
+
 **First time here? Follow [docs/SETUP.md](docs/SETUP.md) step by step.**
 
 ## Run locally
